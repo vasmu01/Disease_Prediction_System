@@ -1,0 +1,917 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Disease Prediction System{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- NAVBAR CSS -->
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+      }
+      
+      body {
+        background: #000;
+        color: #fff;
+        overflow-x: hidden;
+        position: relative;
+      }
+      
+      /* Animated Cursor */
+      .cursor {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transition: transform 0.1s ease;
+      }
+      
+      /* alert message */
+      .messages-container {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+      }
+
+      .alert {
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .alert.success {
+        background: #16a34a;
+        color: white;
+      }
+
+      .alert.error {
+        background: #dc2626;
+        color: white;
+      }
+
+      /* NAVBAR */
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        padding: 0 6vw;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 10;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+        backdrop-filter: blur(12px);
+      }
+      
+      .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        font-size: 14px;
+      }
+      
+      .nav-links a {
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        transition: color 0.3s ease;
+        white-space: nowrap; /* Mobile मा text wrap नहोस् */
+      }
+      
+      .nav-links a:hover {
+        color: #fff;
+      }
+      
+      a {
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+      
+      a:hover {
+        color: #fff;
+      }
+      
+      .nav-cta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .nav-cta a {
+        font-size: 14px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+      
+      .nav-cta .ghost-link {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      .nav-cta .btn-pill {
+        padding: 9px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: #fff;
+        color: #000;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+      
+      .nav-cta .btn-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+      }
+      
+      /* HERO */
+      .hero {
+        height: 100vh;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6vw;
+        overflow: hidden;
+        background: #000;
+      }
+      
+      .hero-inner {
+        position: relative;
+        max-width: 760px;
+        text-align: center;
+        z-index: 1;
+        transform-style: preserve-3d;
+        transition: transform 0.2s ease-out;
+      }
+      
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        font-size: 13px;
+        margin-bottom: 24px;
+      }
+      
+      .hero h1 {
+        font-size: clamp(40px, 5vw, 64px);
+        line-height: 1.05;
+        letter-spacing: 0.02em;
+        margin-bottom: 16px;
+      }
+      
+      .hero p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 32px;
+      }
+      
+      .cta-row {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+      }
+      
+      .btn {
+        padding: 12px 24px;
+        border-radius: 999px;
+        font-size: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-block;
+      }
+      
+      .btn.primary {
+        background: #fff;
+        color: #000;
+      }
+      
+      .btn.ghost {
+        background: transparent;
+        color: #fff;
+      }
+      
+      .btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(255, 255, 255, 0.15);
+      }
+      
+      /* SIGNUP + FOOTER TWO-COLUMN LAYOUT */
+      .page-wrap {
+        min-height: 100vh;
+        display: flex;
+        background: #000;
+        color: #fff;
+      }
+      
+      /* LEFT: signup area */
+      .section-signup {
+        flex: 1.2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 96px 6vw 64px;
+        background: #000;
+      }
+      
+      .signup-card {
+        max-width: 420px;
+        width: 100%;
+        padding: 32px 28px;
+        border-radius: 20px;
+        background: rgba(10, 10, 10, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      
+      .signup-title {
+        font-size: 26px;
+        margin-bottom: 8px;
+      }
+      
+      .signup-sub {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.65);
+        margin-bottom: 24px;
+      }
+      
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+        font-size: 13px;
+      }
+      
+      .field label {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      .field input {
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+      
+      .field input:focus {
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        transform: scale(1.02);
+      }
+      
+      .signup-btn {
+        margin-top: 8px;
+        width: 100%;
+        padding: 11px 18px;
+        border-radius: 999px;
+        border: none;
+        background: #fff;
+        color: #000;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .signup-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 15px 50px rgba(255, 255, 255, 0.2);
+      }
+      
+      .signup-meta {
+        margin-top: 12px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        text-align: center;
+      }
+      
+      .signup-meta a {
+        color: #fff;
+        text-decoration: underline;
+        transition: color 0.3s ease;
+      }
+      
+      .signup-meta a:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      /* HOW IT WORKS SECTION */
+      .section-how {
+        min-height: 100vh;
+        padding: 120px 6vw;
+        background: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .how-container {
+        max-width: 1000px;
+        text-align: center;
+      }
+      
+      .how-title {
+        font-size: clamp(36px, 4vw, 48px);
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #fff, #aaa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .how-subtitle {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 80px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 40px;
+        margin-top: 60px;
+      }
+      
+      .feature-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 40px 32px;
+        text-align: left;
+        transition: all 0.4s ease;
+        backdrop-filter: blur(10px);
+      }
+      
+      .feature-card:hover {
+        transform: translateY(-12px);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 30px 80px rgba(255, 255, 255, 0.1);
+      }
+      
+      .feature-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 24px;
+      }
+      
+      .feature-title {
+        font-size: 20px;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+      
+      .feature-desc {
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.6;
+      }
+
+      /* ✅ MOBILE RESPONSIVE NAVBAR - मुख्य परिवर्तन यहाँ छ */
+      @media (max-width: 768px) {
+        .nav {
+          padding: 0 16px;
+        }
+        
+        .nav-links {
+          display: flex !important; /* Desktop जस्तै देखाउनुहोस् */
+          flex-direction: row; /* Horizontal layout */
+          gap: 12px; /* Mobile gap */
+          font-size: 13px;
+          align-items: center;
+          overflow-x: auto; /* Horizontal scroll if needed */
+          padding-bottom: 4px;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE/Edge */
+          white-space: nowrap;
+        }
+        
+        .nav-links::-webkit-scrollbar {
+          display: none; /* Chrome/Safari scrollbar hide */
+        }
+        
+        .nav-links a {
+          flex-shrink: 0; /* Text shrink नहोस् */
+          font-size: 12px;
+        }
+        
+        .nav-cta {
+          gap: 8px;
+        }
+        
+        .nav-cta span,
+        .nav-cta a {
+          font-size: 13px;
+        }
+        
+        .features-grid {
+          grid-template-columns: 1fr;
+          gap: 24px;
+        }
+        
+        .page-wrap {
+          flex-direction: column;
+        }
+        
+        .section-footer {
+          border-left: none;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 32px;
+        }
+      }
+      
+      @media (max-width: 600px) {
+        .hero {
+          padding: 0 16px;
+        }
+        
+        .cta-row {
+          flex-direction: column;
+        }
+        
+        .btn {
+          width: 100%;
+          text-align: center;
+        }
+        
+        .nav {
+          padding: 0 12px;
+        }
+        
+        .nav-links {
+          gap: 8px;
+          font-size: 12px;
+        }
+        
+        .nav-links a {
+          font-size: 11px;
+          padding: 4px 6px;
+        }
+        
+        .nav-left {
+          font-size: 14px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .nav-links {
+          gap: 6px;
+        }
+        
+        .nav-cta .ghost-link {
+          font-size: 11px;
+          padding: 2px 6px;
+        }
+      }
+    </style>
+
+    <!-- FOOTER CSS -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: #0a0a0a;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      
+      footer {
+        background: linear-gradient(180deg, #111111 0%, #000000 100%);
+        color: #e0e0e0;
+        border-top: 1px solid #222222;
+      }
+      
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 35px 20px 20px;
+      }
+      
+      .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+      
+      .footer-section h3 {
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .footer-section p {
+        color: #a0a0a0;
+        line-height: 1.6;
+        font-size: 13px;
+        margin-bottom: 12px;
+        font-weight: 500;
+      }
+      
+      .footer-section ul {
+        list-style: none;
+      }
+      
+      .footer-section ul li {
+        margin-bottom: 10px;
+      }
+      
+      .footer-section ul li a {
+        color: #a0a0a0;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color 0.3s ease;
+        display: inline-block;
+      }
+      
+      .footer-section ul li a:hover {
+        color: #4a9eff;
+      }
+      
+      .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        color: #a0a0a0;
+        font-size: 13px;
+        font-weight: 500;
+      }
+      
+      .contact-item svg {
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+      
+      .disclaimer {
+        background: #0a0a0a;
+        padding: 20px 20px;
+        border-top: 1px solid #222222;
+      }
+      
+      .disclaimer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      
+      .disclaimer p {
+        color: #888888;
+        font-size: 11px;
+        line-height: 1.5;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+      
+      .footer-bottom {
+        background: #000000;
+        padding: 15px 20px;
+        border-top: 1px solid #1a1a1a;
+      }
+      
+      .footer-bottom-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      
+      .copyright {
+        color: #666666;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      
+      .footer-links {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      
+      .footer-links a {
+        color: #666666;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+      
+      .footer-links a:hover {
+        color: #4a9eff;
+      }
+      
+      .social-links {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+      
+      .social-links a {
+        width: 40px;
+        height: 40px;
+        background: #1a1a1a;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: 1px solid #222222;
+      }
+      
+      .social-links a:hover {
+        background: #2a2a2a;
+        border-color: #4a9eff;
+        transform: translateY(-3px);
+      }
+      
+      .social-links a:hover svg {
+        fill: #4a9eff;
+      }
+      
+      @media (max-width: 768px) {
+        .footer-grid {
+          grid-template-columns: 1fr;
+          gap: 30px;
+        }
+      
+        .footer-bottom-content {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <header class="nav" data-aos="fade-down" data-aos-duration="800">
+      <div class="nav-left">
+        <a href="{% url 'home' %}">Disease Prediction System</a>
+      </div>
+      {% block nav_links %}
+      <nav class="nav-links">
+        <a href="#disease">Predict Disease</a>
+        <a href="#how">How it works</a>
+        <div class="nav-cta">
+          {% if user.is_authenticated %}
+            <span>Hi,{{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="ghost-link">/ Logout</a>
+          {% else %}
+            <a href="{% url 'signup' %}" class="ghost-link">Sign in / Log in</a>
+          {% endif %}
+        </div>
+      </nav>
+      {% endblock %}
+    </header>
+
+    <!-- MESSAGE -->
+    {% if messages %}
+    <div class="messages-container">
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-grid">
+          <div class="footer-section">
+            <h3>About the System</h3>
+            <p>ML Disease Prediction System uses advanced machine learning algorithms to assist healthcare professionals in early disease detection and risk assessment.</p>
+            <p>
+              <strong>Version:</strong> 2.1.0
+            </p>
+          </div>
+
+          <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul>
+              <li><a href="#home">Home</a></li>
+              <li><a href="#prediction">Disease Prediction</a></li>
+              <li><a href="#models">ML Models</a></li>
+              <li><a href="#documentation">Documentation</a></li>
+              <li><a href="#research">Research Papers</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h3>Resources</h3>
+            <ul>
+              <li><a href="#api">API Documentation</a></li>
+              <li><a href="#datasets">Datasets</a></li>
+              <li><a href="#faq">FAQ</a></li>
+              <li><a href="#support">Support Center</a></li>
+              <li><a href="#updates">System Updates</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h3>Contact</h3>
+            <div class="contact-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2">
+                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>magarkiran2064@gmail.com</span>
+            </div>
+            <div class="contact-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+              </svg>
+              <span>+1 -9846244220</span>
+            </div>
+            <div class="contact-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>Medical AI Center, Kathmandu, Nepal</span>
+            </div>
+            <div class="social-media">
+              <h4 style="color: #ffffff; font-size: 14px; margin: 20px 0 15px 0;">Follow Us</h4>
+              <div class="social-links">
+                <a href="#twitter" aria-label="Twitter">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#a0a0a0">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+                <a href="#linkedin" aria-label="LinkedIn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#a0a0a0">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                  </svg>
+                </a>
+                <a href="#facebook" aria-label="Facebook">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#a0a0a0">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </a>
+                <a href="#instagram" aria-label="Instagram">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#a0a0a0">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                  </svg>
+                </a>
+                <a href="#youtube" aria-label="YouTube">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#a0a0a0">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                </a>
+                <a href="#github" aria-label="GitHub">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#a0a0a0">
+                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        <div class="disclaimer-content">
+          <p>
+            <strong>Medical Disclaimer:</strong> This ML Disease Prediction System is designed as a clinical decision support tool and should not be used as a substitute for professional medical advice, diagnosis, or treatment. All predictions and risk assessments must be validated by qualified healthcare professionals. The system's accuracy may vary based on data quality and patient-specific factors.
+          </p>
+          <p>
+            <strong>Data Privacy:</strong> All patient data is processed in compliance with HIPAA regulations and encrypted using industry-standard protocols. We are committed to maintaining the highest standards of data security and patient confidentiality.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-bottom-content">
+          <div class="copyright">© 2026 ML Disease Prediction System. All rights reserved.</div>
+          <div class="footer-links">
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms of Service</a>
+            <a href="#compliance">HIPAA Compliance</a>
+            <a href="#accessibility">Accessibility</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- AOS JS -->
+    <script>
+      // Initialize AOS
+      AOS.init({
+        duration: 1000,
+        easing: 'ease-out-cubic',
+        once: false,
+        mirror: true,
+        offset: 50
+      })
+      
+      // Smooth scrolling
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault()
+          const target = document.querySelector(this.getAttribute('href'))
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      })
+      
+      // Hero 3D tilt
+      const hero = document.querySelector('.hero')
+      const inner = document.querySelector('.hero-inner')
+      if (hero && inner) {
+        hero.addEventListener('mousemove', (e) => {
+          const rect = hero.getBoundingClientRect()
+          const x = (e.clientX - rect.left) / rect.width - 0.5
+          const y = (e.clientY - rect.top) / rect.height - 0.5
+          inner.style.transform = `rotateX(${-y * 10}deg) rotateY(${x * 10}deg) translateZ(20px)`
+        })
+        hero.addEventListener('mouseleave', () => {
+          inner.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0)'
+        })
+      }
+      
+      // Navbar scroll effect
+      const nav = document.querySelector('.nav')
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 100) {
+          nav.style.background = 'rgba(0,0,0,0.95)'
+          nav.style.backdropFilter = 'blur(20px)'
+        } else {
+          nav.style.background = 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0))'
+          nav.style.backdropFilter = 'blur(12px)'
+        }
+      })
+      
+      // White animated cursor
+      const cursor = document.querySelector('.cursor')
+      document.addEventListener('mousemove', (e) => {
+        if (cursor) {
+          cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+        }
+      })
+      
+      // Scroll to top on reload
+      window.onbeforeunload = () => {
+        window.scrollTo(0, 0)
+      }
+      window.addEventListener('pageshow', () => {
+        window.scrollTo(0, 0)
+      })
+      
+      setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(msg => msg.remove())
+      }, 2000)
+    </script>
+  </body>
+</html>

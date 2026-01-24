@@ -1,0 +1,20 @@
+# Virtual environment
+venv/
+pyvenv.cfg
+
+# Secrets
+client_secret*.json
+.env
+
+# ML models
+*.pkl
+
+# Database
+db.sqlite3
+
+# Mac OS
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc

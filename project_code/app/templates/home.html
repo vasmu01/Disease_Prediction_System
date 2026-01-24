@@ -1,0 +1,580 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <style>
+    .hero {
+      height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6vw;
+      overflow: hidden;
+      background: #000;
+    }
+    
+    .hero-inner {
+      position: relative;
+      max-width: 760px;
+      text-align: center;
+      z-index: 1;
+      transform-style: preserve-3d;
+      transition: transform 0.2s ease-out;
+    }
+    
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    
+    .hero h1 {
+      font-size: clamp(40px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    
+    .hero p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 32px;
+    }
+    
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-block;
+    }
+    
+    .btn.primary {
+      background: #fff;
+      color: #000;
+    }
+    
+    .btn.ghost {
+      background: transparent;
+      color: #fff;
+    }
+    
+    .btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(255, 255, 255, 0.15);
+    }
+    
+    /* SIGNUP + FOOTER TWO-COLUMN LAYOUT */
+    
+    .page-wrap {
+      min-height: 100vh;
+      display: flex;
+      background: #000;
+      color: #fff;
+    }
+    
+    /* LEFT: signup area */
+    .section-signup {
+      flex: 1.2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 96px 6vw 64px;
+      background: #000;
+    }
+    
+    .signup-card {
+      max-width: 420px;
+      width: 100%;
+      padding: 32px 28px;
+      border-radius: 20px;
+      background: rgba(10, 10, 10, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+    }
+    
+    .signup-title {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+    
+    .signup-sub {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 24px;
+    }
+    
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    
+    .field label {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .field input {
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    
+    .field input:focus {
+      border-color: #fff;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+    
+    .signup-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 11px 18px;
+      border-radius: 999px;
+      border: none;
+      background: #fff;
+      color: #000;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .signup-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 15px 50px rgba(255, 255, 255, 0.2);
+    }
+    
+    .signup-meta {
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+    }
+    
+    .signup-meta a {
+      color: #fff;
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+    
+    .signup-meta a:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* RIGHT: footer column */
+    .section-footer {
+      flex: 0.8;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 96px 6vw 64px;
+      background: #000;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.65);
+    }
+    
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+    }
+    
+    .footer-links a:hover {
+      color: #fff;
+    }
+    
+    /* HOW IT WORKS SECTION */
+    .section-how {
+      min-height: 100vh;
+      padding: 120px 6vw;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .how-container {
+      max-width: 1000px;
+      text-align: center;
+    }
+    
+    .how-title {
+      font-size: clamp(36px, 4vw, 48px);
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #fff, #aaa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .how-subtitle {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 80px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+      margin-top: 60px;
+    }
+    
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 40px 32px;
+      text-align: left;
+      transition: all 0.4s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-12px);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 30px 80px rgba(255, 255, 255, 0.1);
+    }
+    
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    
+    .feature-title {
+      font-size: 20px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .feature-desc {
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      .page-wrap {
+        flex-direction: column;
+      }
+      .section-footer {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 32px;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .hero {
+        padding: 0 16px;
+      }
+      .cta-row {
+        flex-direction: column;
+      }
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
+      .nav {
+        padding: 0 16px;
+      }
+    }
+  </style>
+
+  <style>
+    /* DISEASE PREDICTION SECTION */
+    .section-disease {
+      min-height: 100vh;
+      padding: 120px 6vw 120px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .disease-container {
+      max-width: 1200px;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .disease-title {
+      font-size: clamp(36px, 5vw, 52px);
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff, #ccc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+    }
+    
+    .disease-subtitle {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 80px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+    
+    .disease-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .disease-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 48px 32px;
+      text-align: left;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .disease-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+    
+    .disease-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .disease-card:hover {
+      transform: translateY(-16px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 32px 80px rgba(255, 255, 255, 0.08);
+    }
+    
+    .disease-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 28px;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+    
+    .disease-title-card {
+      font-size: 24px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+    
+    .disease-desc {
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.7;
+      margin-bottom: 24px;
+      font-size: 16px;
+    }
+    
+    .disease-btn {
+      padding: 14px 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-block;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .disease-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .disease-btn:hover::before {
+      left: 100%;
+    }
+    
+    .disease-btn:hover {
+      background: #fff;
+      color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255, 255, 255, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+      .section-disease {
+        padding: 100px 24px 80px;
+        min-height: calc(100vh - 64px);
+      }
+    
+      .disease-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    
+      .disease-card {
+        padding: 40px 24px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .disease-card {
+        padding: 32px 20px;
+      }
+    
+      .disease-title {
+        font-size: 32px;
+      }
+    }
+  </style>
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-inner" data-aos="zoom-in" data-aos-delay="200" data-aos-duration="1200">
+      <div class="badge" data-aos="fade-up" data-aos-delay="400">AI-Powered Health Prediction</div>
+      <h1 data-aos="fade-up" data-aos-delay="600">Predicting Health<br />Empowering Lives</h1>
+      <p data-aos="fade-up" data-aos-delay="800">Use an intelligent web-based system that analyzes health data and symptoms to predict the risk of diseases using machine learning.</p>
+      <div class="cta-row" data-aos="fade-up" data-aos-delay="1000">
+{% if user.is_authenticated %}
+    <!-- User logged in -->
+{% else %}
+    <!-- User NOT logged in -->
+    <a href="{% url 'signup' %}" class="btn primary">Get Started</a>
+{% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- DISEASE PREDICTION SECTION -->
+  <section class="section-disease" id="disease">
+    <div class="disease-container">
+      <h2 class="disease-title" data-aos="fade-up">Disease Predictions</h2>
+      <p class="disease-subtitle" data-aos="fade-up" data-aos-delay="200">Select a disease to predict your risk using advanced AI models.</p>
+
+      <div class="disease-grid">
+        <div class="disease-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="disease-icon">🩸</div>
+          <h3 class="disease-title-card">Diabetes Prediction</h3>
+          <p class="disease-desc">Predict your risk of diabetes based on symptoms, lifestyle, and medical history.</p>
+          <a href="{% url 'home' %}" class="disease-btn">Predict Now</a>
+        </div>
+
+        <div class="disease-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="disease-icon">🧬</div>
+          <h3 class="disease-title-card">Cancer Prediction</h3>
+          <p class="disease-desc">Get an AI-powered assessment of your cancer risk using your health data.</p>
+          <a href="{% url 'home' %}" class="disease-btn">Predict Now</a>
+        </div>
+
+        <div class="disease-card" data-aos="fade-up" data-aos-delay="500">
+          <div class="disease-icon">🫁</div>
+          <h3 class="disease-title-card">Lung Cancer Prediction</h3>
+          <p class="disease-desc">Analyze your risk of lung cancer with our specialized AI model.</p>
+          <a href="{% url 'home' %}" class="disease-btn">Predict Now</a>
+        </div>
+
+        <div class="disease-card" data-aos="fade-up" data-aos-delay="700">
+          <div class="disease-icon">🎀</div>
+          <h3 class="disease-title-card">Breast Cancer Prediction</h3>
+          <p class="disease-desc">Predict your breast cancer risk using genetic and lifestyle factors.</p>
+          <a href="{% url 'home' %}" class="disease-btn">Predict Now</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section-how" id="how">
+    <div class="how-container">
+      <h2 class="how-title" data-aos="fade-up">How It Works</h2>
+      <p class="how-subtitle" data-aos="fade-up" data-aos-delay="200">Our AI analyzes your symptoms, medical history, and lifestyle factors to provide accurate disease predictions in seconds.</p>
+      <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="feature-icon">🔬</div>
+          <h3 class="feature-title">AI Analysis</h3>
+          <p class="feature-desc">Advanced machine learning models trained on millions of medical records for precise predictions.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Risk Assessment</h3>
+          <p class="feature-desc">Get detailed risk scores and probability percentages for 50+ common diseases instantly.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+          <div class="feature-icon">🩺</div>
+          <h3 class="feature-title">Prevention Plan</h3>
+          <p class="feature-desc">Personalized recommendations and lifestyle changes to reduce your disease risk.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
