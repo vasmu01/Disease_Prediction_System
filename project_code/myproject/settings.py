@@ -12,6 +12,16 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from django.contrib.messages import constants as messages
+import dj_database_url
+
+from decouple import config
+SECRET_KEY = config('SECRET_KEY')
+
+ALLOWED_HOSTS = ['*'] 
+DATABASES = {
+    'default': dj_database_url.config(default=config('DATABASE_URL'))
+}
+
 
 MESSAGE_TAGS = {
     messages.SUCCESS: 'success',
@@ -29,9 +39,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-9%0836$j$7w54!kkb7g(_+e#g-k6m7xy!&bxvu4goimr)!9(r1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
 
 
 
@@ -55,18 +64,19 @@ INSTALLED_APPS = [
 'allauth.socialaccount.providers.google',
 
 ]
-SOCIALCCOUNT_PROVIDER={
-"google":{
-    "SCOPE":[
-        "profile",
-        "email"
-    ],
-"AUTH_PARMS":{"access_type":"online",
-  'prompt': 'select_account', }
-
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email"
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+            "prompt": "select_account"
+        }
+    }
 }
 
-}
 
 
 
@@ -106,12 +116,13 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME':'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Password validation
