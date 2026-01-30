@@ -1,97 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Diabetes Risk Prediction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 620px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; color: #34495e; }
-        input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 17px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
-        button:hover { background: #c0392b; }
-        .result-box { margin-top: 35px; padding: 25px; border-radius: 10px; background: #ecf0f1; border-left: 6px solid #27ae60; }
-        .danger { border-left-color: #e74c3c; background: #ffebee; }
-        .result-title { font-size: 1.4em; margin: 0 0 15px 0; }
-        .prob { font-size: 2.1em; font-weight: bold; margin: 10px 0; }
-        .error { color: #c0392b; text-align: center; margin: 20px 0; font-weight: 500; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.9);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255,107,107,0.4);
+        }
+
+        .error-list {
+            background: rgba(255,107,107,0.2);
+            border: 1px solid rgba(255,107,107,0.4);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
+        .error-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .has-diabetes {
+            background: rgba(255,107,107,0.3);
+            color: #ff6b6b;
+            border: 2px solid rgba(255,107,107,0.5);
+        }
+
+        .no-diabetes {
+            background: rgba(52,152,219,0.3);
+            color: #3498db;
+            border: 2px solid rgba(52,152,219,0.5);
+        }
+
+        .probability {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .suggestions {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .input-display {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🩸 Diabetes Risk Prediction</h1>
-    <p class="subtitle">Enter your details below</p>
+    <div class="container">
+        <h1>🏥 Diabetes Prediction</h1>
 
-    {% if error %}
-        <div class="error">{{ error }}</div>
-    {% endif %}
+        {% if errors %}
+        <div class="error-list">
+            <ul>
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-    <form method="post">
-        {% csrf_token %}
+        {% if error %}
+        <div class="error-list">
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
 
-        <div class="form-group">
-            <label>Pregnancies</label>
-            <input type="number" name="pregnancies" min="0" max="20" required placeholder="e.g. 1">
+        {% if user_input %}
+        <div class="input-display">
+            <h3>📊 Your Input:</h3>
+            <ul style="color: white; list-style: none; padding: 0;">
+                <li>Pregnancies: {{ user_input.pregnancies }}</li>
+                <li>Glucose: {{ user_input.glucose }}</li>
+                <li>Blood Pressure: {{ user_input.bp }}</li>
+                <li>Skin Thickness: {{ user_input.skin }}</li>
+                <li>Insulin: {{ user_input.insulin }}</li>
+                <li>BMI: {{ user_input.bmi }}</li>
+                <li>Diabetes Pedigree: {{ user_input.dpf }}</li>
+                <li>Age: {{ user_input.age }}</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>👩 Pregnancies</label>
+                <input type="number" name="pregnancies" value="{{ user_input.pregnancies|default:'' }}" min="0" step="1">
+            </div>
+
+            <div class="form-group">
+                <label>🩸 Glucose (mg/dL)</label>
+                <input type="number" name="glucose" value="{{ user_input.glucose|default:'' }}" min="0" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>🩺 Blood Pressure (mmHg)</label>
+                <input type="number" name="bp" value="{{ user_input.bp|default:'' }}" min="0" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>📏 Skin Thickness (mm)</label>
+                <input type="number" name="skin" value="{{ user_input.skin|default:'' }}" min="0" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>💉 Insulin (mu U/ml)</label>
+                <input type="number" name="insulin" value="{{ user_input.insulin|default:'' }}" min="0" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>⚖️ BMI (kg/m²)</label>
+                <input type="number" name="bmi" value="{{ user_input.bmi|default:'' }}" min="0" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>🧬 Diabetes Pedigree Function</label>
+                <input type="number" name="dpf" value="{{ user_input.dpf|default:'' }}" min="0" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label>🎂 Age (years)</label>
+                <input type="number" name="age" value="{{ user_input.age|default:'' }}" min="0" step="1">
+            </div>
+
+            <button type="submit" class="btn">🔮 Predict Diabetes</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result {% if prediction == 'HAS Diabetes' %}has-diabetes{% else %}no-diabetes{% endif %}">
+            <div class="probability">
+                {{ prediction }} 
+                <span style="font-size: 0.6em;">({{ probability }}% risk)</span>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>Glucose</label>
-            <input type="number" name="glucose" min="0" required placeholder="e.g. 120">
+        {% if suggestions %}
+        <div class="suggestions">
+            <h4>💡 Personalized Health Suggestions:</h4>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                {% for suggestion in suggestions %}
+                <li>{{ suggestion }}</li>
+                {% endfor %}
+            </ul>
         </div>
-
-        <div class="form-group">
-            <label>Blood Pressure</label>
-            <input type="number" name="blood_pressure" min="0" required placeholder="e.g. 80">
-        </div>
-
-        <div class="form-group">
-            <label>Skin Thickness</label>
-            <input type="number" name="skin_thickness" min="0" required placeholder="e.g. 20">
-        </div>
-
-        <div class="form-group">
-            <label>Insulin</label>
-            <input type="number" name="insulin" min="0" required placeholder="e.g. 79">
-        </div>
-
-        <div class="form-group">
-            <label>BMI</label>
-            <input type="number" step="0.1" name="bmi" min="0" required placeholder="e.g. 32.0">
-        </div>
-
-        <div class="form-group">
-            <label>Diabetes Pedigree Function</label>
-            <input type="number" step="0.001" name="diabetes_pedigree_function" min="0" required placeholder="e.g. 0.627">
-        </div>
-
-        <div class="form-group">
-            <label>Age</label>
-            <input type="number" name="age" min="1" max="120" required placeholder="e.g. 33">
-        </div>
-
-        <button type="submit">Predict Risk</button>
-    </form>
-
-    {% if probability is not None %}
-        <div class="result-box {% if has_disease %}danger{% endif %}">
-            <h2 class="result-title">
-                {% if has_disease %}
-                    🟥 High Risk – Disease Likely
-                {% else %}
-                    🟩 Low Risk – Disease Unlikely
-                {% endif %}
-            </h2>
-            <div class="prob">{{ probability }}%</div>
-            <p style="font-size:1.1em; margin:0;">
-                Probability of having diabetes: <strong>{{ probability }}%</strong><br>
-                Probability of NOT having: <strong>{{ no_disease_prob }}%</strong>
-            </p>
-        </div>
-    {% endif %}
-</div>
+        {% endif %}
+        {% endif %}
+    </div>
 </body>
 </html>

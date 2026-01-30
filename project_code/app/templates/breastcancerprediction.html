@@ -1,207 +1,1442 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Breast Cancer Risk Prediction</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 620px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; color: #34495e; }
-        input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 17px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
-        button:hover { background: #c0392b; }
-        .result-box { margin-top: 35px; padding: 25px; border-radius: 10px; background: #ecf0f1; border-left: 6px solid #27ae60; }
-        .danger { border-left-color: #e74c3c; background: #ffebee; }
-        .result-title { font-size: 1.4em; margin: 0 0 15px 0; }
-        .prob { font-size: 2.1em; font-weight: bold; margin: 10px 0; }
-        .error { color: #c0392b; text-align: center; margin: 20px 0; font-weight: 500; }
-    </style>
-</head>
-<body>
-<div class="container">
-    <h1>🎀 Breast Cancer Risk Prediction</h1>
-    <p class="subtitle">Enter tumor details below</p>
+<!-- templates/breastcancerprediction.html -->
+{% extends 'base.html' %}
+{% load static %}
 
-    {% if error %}
-        <div class="error">{{ error }}</div>
+{% block title %}Breast Cancer Prediction | VitaPredica{% endblock %}
+
+{% block nav_links %}
+<nav class="nav-links">
+  <a href="{% url 'home' %}">Home</a>
+  <a href="#guide">Parameter Guide</a>
+  <div class="nav-cta">
+    {% if user.is_authenticated %}
+      <span>Hi, {{ user.username }}</span>
+      <a href="{% url 'logout' %}" class="ghost-link">/ Logout</a>
+    {% else %}
+      <a href="{% url 'signup' %}" class="ghost-link">Sign in / Log in</a>
     {% endif %}
+  </div>
+</nav>
+{% endblock %}
 
-    <form method="post">
-        {% csrf_token %}
+{% block content %}
+<style>
+  /* Breast Cancer Prediction Page Styles */
+  .prediction-hero {
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 6vw 60px;
+    background: linear-gradient(135deg, #000 0%, #0a0a0a 50%, #000 100%);
+    position: relative;
+    overflow: hidden;
+  }
 
-        <div class="form-group">
-            <label>Mean Radius</label>
-            <input type="number" step="0.001" name="radius_mean" min="0" required placeholder="e.g. 17.99">
+  .prediction-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .prediction-hero-content {
+    text-align: center;
+    max-width: 700px;
+    z-index: 1;
+  }
+
+  .prediction-hero .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 13px;
+    margin-bottom: 24px;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .prediction-hero h1 {
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .prediction-hero p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+  }
+
+  /* Main Content */
+  .prediction-content {
+    padding: 60px 6vw 80px;
+    background: #f5f5f5;
+  }
+
+  .prediction-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .prediction-container {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 0;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.08);
+  }
+
+  @media (max-width: 1024px) {
+    .prediction-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Left Side - Guide (Dark) */
+  .guide-section {
+    padding: 40px;
+    background: #0a0a0a;
+    color: #fff;
+  }
+
+  @media (max-width: 1024px) {
+    .guide-section {
+      padding: 24px;
+    }
+  }
+
+  .guide-section .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+  }
+
+  .guide-section h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-left: 16px;
+    border-left: 3px solid #fff;
+  }
+
+  .guide-section > p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .guide-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .guide-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .guide-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .guide-list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+  }
+
+  .guide-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+  }
+
+  .guide-category {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.4);
+    margin-top: 12px;
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+
+  .guide-category:first-of-type {
+    margin-top: 0;
+  }
+
+  .guide-item {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .guide-item:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .guide-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .guide-item strong {
+    font-size: 13px;
+    color: #fff;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .guide-item .short-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .guide-item .range {
+    background: #fff;
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .guide-item .range.mean {
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .guide-item .range.se {
+    background: #8b5cf6;
+    color: #fff;
+  }
+
+  .guide-item .range.worst {
+    background: #ef4444;
+    color: #fff;
+  }
+
+  /* Expanded Details */
+  .guide-item .details {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    opacity: 0;
+  }
+
+  .guide-item:hover .details {
+    max-height: 350px;
+    opacity: 1;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .guide-item .details p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .guide-item .details .tip {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #ffc107;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .guide-item .details .tip svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .guide-info-box {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .guide-info-box h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #60a5fa;
+    margin-bottom: 8px;
+  }
+
+  .guide-info-box p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+  }
+
+  .guide-info-box ul {
+    margin-top: 8px;
+    padding-left: 16px;
+  }
+
+  .guide-info-box li {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+  }
+
+  /* Right Side - Form (White) */
+  .form-section {
+    padding: 40px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 700px;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 1024px) {
+    .form-section {
+      padding: 24px;
+      max-height: none;
+    }
+  }
+
+  .form-section::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .form-section::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .form-section::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  .form-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #737373;
+    margin-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-section-title .badge-mean {
+    background: #3b82f6;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .form-section-title .badge-se {
+    background: #8b5cf6;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .form-section-title .badge-worst {
+    background: #ef4444;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-row.five-col {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  @media (max-width: 900px) {
+    .form-row.five-col {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .form-row,
+    .form-row.five-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #171717;
+  }
+
+  .form-group label .required {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+
+  .form-group input {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #0a0a0a;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .form-group input:focus {
+    border-color: #0a0a0a;
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.08);
+  }
+
+  .form-group input::placeholder {
+    color: #a3a3a3;
+  }
+
+  .btn-predict {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 10px;
+    border: none;
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: sticky;
+    bottom: 0;
+  }
+
+  .btn-predict:hover {
+    background: #262626;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+
+  .btn-predict:active {
+    transform: scale(0.98);
+  }
+
+  /* Results Section - Full Width Below */
+  .results-section {
+    margin-top: 40px;
+    animation: fadeInUp 0.6s ease;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .results-card {
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.08);
+  }
+
+  /* Results Header */
+  .results-header {
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  @media (max-width: 768px) {
+    .results-header {
+      flex-direction: column;
+      text-align: center;
+      padding: 32px 24px;
+    }
+  }
+
+  .results-benign .results-header {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+
+  .results-malignant .results-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+
+  .results-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .results-header-left {
+      flex-direction: column;
+    }
+  }
+
+  .results-icon-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .results-icon-large svg {
+    width: 40px;
+    height: 40px;
+    color: #fff;
+  }
+
+  .results-title-area h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .results-title-area p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.9);
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .results-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  @media (max-width: 768px) {
+    .results-header-right {
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  .results-header-right .main-percentage {
+    font-size: 56px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .results-header-right .main-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 4px;
+  }
+
+  /* Results Body */
+  .results-body {
+    padding: 40px 48px;
+  }
+
+  @media (max-width: 768px) {
+    .results-body {
+      padding: 24px;
+    }
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 900px) {
+    .results-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .result-stat-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .result-stat-card:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    transform: translateY(-4px);
+  }
+
+  .result-stat-card .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .result-stat-card .stat-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .result-stat-card.danger .stat-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .result-stat-card.success .stat-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .result-stat-card.neutral .stat-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+
+  .result-stat-card .stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .result-stat-card.danger .stat-value {
+    color: #ef4444;
+  }
+
+  .result-stat-card.success .stat-value {
+    color: #22c55e;
+  }
+
+  .result-stat-card.neutral .stat-value {
+    color: #3b82f6;
+  }
+
+  .result-stat-card .stat-label {
+    font-size: 13px;
+    color: #737373;
+    font-weight: 500;
+  }
+
+  /* Risk Meter */
+  .risk-meter-container {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+
+  .risk-meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .risk-meter-header h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #171717;
+  }
+
+  .risk-meter-header .risk-badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .risk-meter-header .risk-badge.malignant {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .risk-meter-header .risk-badge.benign {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .risk-bar-wrapper {
+    position: relative;
+    height: 16px;
+    background: linear-gradient(90deg, #22c55e 0%, #fbbf24 50%, #ef4444 100%);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .risk-bar-indicator {
+    position: absolute;
+    top: -8px;
+    width: 4px;
+    height: 32px;
+    background: #0a0a0a;
+    border-radius: 2px;
+    transition: left 1s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .risk-bar-indicator::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #0a0a0a;
+  }
+
+  .risk-meter-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .risk-meter-labels span {
+    font-size: 12px;
+    color: #737373;
+  }
+
+  /* Recommendation Section */
+  .recommendation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .recommendation-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .recommendation-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    gap: 20px;
+  }
+
+  .recommendation-card .rec-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .recommendation-card .rec-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .results-benign .recommendation-card .rec-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .results-malignant .recommendation-card .rec-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .recommendation-card .rec-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #171717;
+    margin-bottom: 8px;
+  }
+
+  .recommendation-card .rec-content p {
+    font-size: 13px;
+    color: #525252;
+    line-height: 1.6;
+  }
+
+  /* Disclaimer */
+  .results-disclaimer {
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .results-disclaimer svg {
+    flex-shrink: 0;
+    color: #0284c7;
+  }
+
+  .results-disclaimer p {
+    font-size: 13px;
+    color: #0369a1;
+    line-height: 1.6;
+  }
+
+  /* Error */
+  .error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .error-message svg {
+    flex-shrink: 0;
+  }
+</style>
+
+<!-- Hero Section -->
+<section class="prediction-hero" data-aos="fade-up">
+  <div class="prediction-hero-content">
+    <div class="badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+      </svg>
+      Tumor Analysis
+    </div>
+    <h1>Breast Cancer Prediction</h1>
+    <p>Enter tumor cell nucleus measurements from Fine Needle Aspiration (FNA) biopsy. Our model analyzes 30 features to classify tumors as Benign or Malignant.</p>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="prediction-content">
+  <div class="prediction-wrapper">
+    
+    <!-- Form Container -->
+    <form method="POST">
+      {% csrf_token %}
+      <div class="prediction-container" data-aos="fade-up" data-aos-delay="100">
+        
+        <!-- Left Side - Guide (Dark) -->
+        <div class="guide-section" id="guide">
+          <p class="section-label">Parameter Guide</p>
+          <h2>Tumor Feature Analysis</h2>
+          <p>This tool uses 30 tumor cell nucleus measurements computed from digitized FNA images to predict if a tumor is benign or malignant.</p>
+          
+          <div class="guide-info-box">
+            <h4>Understanding Feature Categories</h4>
+            <p>Each of the 10 cell nucleus features is measured in three ways:</p>
+            <ul>
+              <li><strong>Mean:</strong> Average value across all cells</li>
+              <li><strong>SE:</strong> Standard Error (measurement variability)</li>
+              <li><strong>Worst:</strong> Mean of the 3 largest/worst values</li>
+            </ul>
+          </div>
+          
+          <div class="guide-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            Feature Definitions
+          </div>
+          
+          <div class="guide-list">
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Radius</strong>
+                  <span class="short-desc">Mean distance from center to perimeter</span>
+                </div>
+                <span class="range">6.9 - 28.1</span>
+              </div>
+              <div class="details">
+                <p>Radius measures the size of the cell nucleus. Larger radius values often indicate malignancy as cancer cells tend to be larger than normal cells.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 14.1 | SE example: 0.4 | Worst example: 16.8
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Texture</strong>
+                  <span class="short-desc">Standard deviation of gray-scale values</span>
+                </div>
+                <span class="range">9.7 - 39.3</span>
+              </div>
+              <div class="details">
+                <p>Texture measures the variation in pixel intensity. Higher texture values indicate more irregular cell surfaces, which can be a sign of malignancy.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 19.3 | SE example: 1.2 | Worst example: 25.5
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Perimeter</strong>
+                  <span class="short-desc">Total boundary length of the nucleus</span>
+                </div>
+                <span class="range">43.8 - 188.5</span>
+              </div>
+              <div class="details">
+                <p>Perimeter is the total distance around the cell nucleus boundary. Larger perimeters correlate with larger, potentially malignant cells.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 91.9 | SE example: 2.9 | Worst example: 107.3
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Area</strong>
+                  <span class="short-desc">Total area of the cell nucleus</span>
+                </div>
+                <span class="range">143 - 2501</span>
+              </div>
+              <div class="details">
+                <p>Area represents the size of the nucleus in square units. Malignant tumors typically have larger nuclear areas due to uncontrolled cell growth.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 654.9 | SE example: 40.3 | Worst example: 880.6
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Smoothness</strong>
+                  <span class="short-desc">Local variation in radius lengths</span>
+                </div>
+                <span class="range">0.05 - 0.16</span>
+              </div>
+              <div class="details">
+                <p>Smoothness measures how uniform the cell boundary is. Lower values indicate smoother, more regular boundaries typical of benign cells.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 0.096 | SE example: 0.007 | Worst example: 0.132
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Compactness</strong>
+                  <span class="short-desc">Perimeter^2 / Area - 1.0</span>
+                </div>
+                <span class="range">0.02 - 0.35</span>
+              </div>
+              <div class="details">
+                <p>Compactness measures how circular the nucleus is. Higher values indicate more irregular shapes, which can suggest malignancy.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 0.104 | SE example: 0.025 | Worst example: 0.254
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Concavity</strong>
+                  <span class="short-desc">Severity of concave portions</span>
+                </div>
+                <span class="range">0.0 - 0.43</span>
+              </div>
+              <div class="details">
+                <p>Concavity measures the presence and depth of indentations in the cell boundary. Higher concavity often indicates malignant characteristics.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 0.089 | SE example: 0.032 | Worst example: 0.272
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Concave Points</strong>
+                  <span class="short-desc">Number of concave portions</span>
+                </div>
+                <span class="range">0.0 - 0.20</span>
+              </div>
+              <div class="details">
+                <p>Counts the number of indentations in the nucleus boundary. More concave points can indicate irregular cell boundaries seen in malignant tumors.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 0.049 | SE example: 0.015 | Worst example: 0.114
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Symmetry</strong>
+                  <span class="short-desc">Symmetry of the cell nucleus</span>
+                </div>
+                <span class="range">0.11 - 0.30</span>
+              </div>
+              <div class="details">
+                <p>Measures how symmetric the cell nucleus is. Malignant cells often show asymmetry due to irregular growth patterns.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 0.181 | SE example: 0.021 | Worst example: 0.290
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Fractal Dimension</strong>
+                  <span class="short-desc">Coastline approximation - 1</span>
+                </div>
+                <span class="range">0.05 - 0.10</span>
+              </div>
+              <div class="details">
+                <p>Fractal dimension measures the complexity of the cell boundary. Higher values indicate more irregular, complex boundaries associated with malignancy.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Mean example: 0.063 | SE example: 0.004 | Worst example: 0.084
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-            <label>Mean Texture</label>
-            <input type="number" step="0.001" name="texture_mean" min="0" required placeholder="e.g. 10.38">
-        </div>
+        <!-- Right Side - Form (White) -->
+        <div class="form-section">
+          <!-- Mean Features -->
+          <p class="form-section-title">
+            Mean Values
+            <span class="badge-mean">MEAN</span>
+          </p>
+          <div class="form-row five-col">
+            <div class="form-group">
+              <label>Radius <span class="required">*</span></label>
+              <input type="number" name="radius_mean" placeholder="e.g. 14.1" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Texture <span class="required">*</span></label>
+              <input type="number" name="texture_mean" placeholder="e.g. 19.3" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Perimeter <span class="required">*</span></label>
+              <input type="number" name="perimeter_mean" placeholder="e.g. 91.9" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Area <span class="required">*</span></label>
+              <input type="number" name="area_mean" placeholder="e.g. 654.9" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Smoothness <span class="required">*</span></label>
+              <input type="number" name="smoothness_mean" placeholder="e.g. 0.096" step="0.0001" required>
+            </div>
+          </div>
+          <div class="form-row five-col">
+            <div class="form-group">
+              <label>Compactness <span class="required">*</span></label>
+              <input type="number" name="compactness_mean" placeholder="e.g. 0.104" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Concavity <span class="required">*</span></label>
+              <input type="number" name="concavity_mean" placeholder="e.g. 0.089" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Concave Pts <span class="required">*</span></label>
+              <input type="number" name="concave_points_mean" placeholder="e.g. 0.049" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Symmetry <span class="required">*</span></label>
+              <input type="number" name="symmetry_mean" placeholder="e.g. 0.181" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Fractal Dim <span class="required">*</span></label>
+              <input type="number" name="fractal_dimension_mean" placeholder="e.g. 0.063" step="0.0001" required>
+            </div>
+          </div>
 
-        <div class="form-group">
-            <label>Mean Perimeter</label>
-            <input type="number" step="0.001" name="perimeter_mean" min="0" required placeholder="e.g. 122.8">
-        </div>
+          <!-- SE Features -->
+          <p class="form-section-title">
+            Standard Error Values
+            <span class="badge-se">SE</span>
+          </p>
+          <div class="form-row five-col">
+            <div class="form-group">
+              <label>Radius <span class="required">*</span></label>
+              <input type="number" name="radius_se" placeholder="e.g. 0.4" step="0.001" required>
+            </div>
+            <div class="form-group">
+              <label>Texture <span class="required">*</span></label>
+              <input type="number" name="texture_se" placeholder="e.g. 1.2" step="0.001" required>
+            </div>
+            <div class="form-group">
+              <label>Perimeter <span class="required">*</span></label>
+              <input type="number" name="perimeter_se" placeholder="e.g. 2.9" step="0.001" required>
+            </div>
+            <div class="form-group">
+              <label>Area <span class="required">*</span></label>
+              <input type="number" name="area_se" placeholder="e.g. 40.3" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Smoothness <span class="required">*</span></label>
+              <input type="number" name="smoothness_se" placeholder="e.g. 0.007" step="0.0001" required>
+            </div>
+          </div>
+          <div class="form-row five-col">
+            <div class="form-group">
+              <label>Compactness <span class="required">*</span></label>
+              <input type="number" name="compactness_se" placeholder="e.g. 0.025" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Concavity <span class="required">*</span></label>
+              <input type="number" name="concavity_se" placeholder="e.g. 0.032" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Concave Pts <span class="required">*</span></label>
+              <input type="number" name="concave_points_se" placeholder="e.g. 0.015" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Symmetry <span class="required">*</span></label>
+              <input type="number" name="symmetry_se" placeholder="e.g. 0.021" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Fractal Dim <span class="required">*</span></label>
+              <input type="number" name="fractal_dimension_se" placeholder="e.g. 0.004" step="0.0001" required>
+            </div>
+          </div>
 
-        <div class="form-group">
-            <label>Mean Area</label>
-            <input type="number" step="0.001" name="area_mean" min="0" required placeholder="e.g. 1001">
-        </div>
+          <!-- Worst Features -->
+          <p class="form-section-title">
+            Worst Values (Largest 3 Mean)
+            <span class="badge-worst">WORST</span>
+          </p>
+          <div class="form-row five-col">
+            <div class="form-group">
+              <label>Radius <span class="required">*</span></label>
+              <input type="number" name="radius_worst" placeholder="e.g. 16.8" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Texture <span class="required">*</span></label>
+              <input type="number" name="texture_worst" placeholder="e.g. 25.5" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Perimeter <span class="required">*</span></label>
+              <input type="number" name="perimeter_worst" placeholder="e.g. 107.3" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Area <span class="required">*</span></label>
+              <input type="number" name="area_worst" placeholder="e.g. 880.6" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Smoothness <span class="required">*</span></label>
+              <input type="number" name="smoothness_worst" placeholder="e.g. 0.132" step="0.0001" required>
+            </div>
+          </div>
+          <div class="form-row five-col">
+            <div class="form-group">
+              <label>Compactness <span class="required">*</span></label>
+              <input type="number" name="compactness_worst" placeholder="e.g. 0.254" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Concavity <span class="required">*</span></label>
+              <input type="number" name="concavity_worst" placeholder="e.g. 0.272" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Concave Pts <span class="required">*</span></label>
+              <input type="number" name="concave_points_worst" placeholder="e.g. 0.114" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Symmetry <span class="required">*</span></label>
+              <input type="number" name="symmetry_worst" placeholder="e.g. 0.290" step="0.0001" required>
+            </div>
+            <div class="form-group">
+              <label>Fractal Dim <span class="required">*</span></label>
+              <input type="number" name="fractal_dimension_worst" placeholder="e.g. 0.084" step="0.0001" required>
+            </div>
+          </div>
 
-        <div class="form-group">
-            <label>Mean Smoothness</label>
-            <input type="number" step="0.001" name="smoothness_mean" min="0" required placeholder="e.g. 0.1184">
-        </div>
+          <button type="submit" class="btn-predict">Analyze Tumor</button>
 
-        <div class="form-group">
-            <label>Mean Compactness</label>
-            <input type="number" step="0.001" name="compactness_mean" min="0" required placeholder="e.g. 0.2776">
+          {% if error %}
+          <div class="error-message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span><strong>Error:</strong> {{ error }}</span>
+          </div>
+          {% endif %}
         </div>
-
-        <div class="form-group">
-            <label>Mean Concavity</label>
-            <input type="number" step="0.001" name="concavity_mean" min="0" required placeholder="e.g. 0.3001">
-        </div>
-
-        <div class="form-group">
-            <label>Mean Concave Points</label>
-            <input type="number" step="0.001" name="concave_points_mean" min="0" required placeholder="e.g. 0.1471">
-        </div>
-
-        <div class="form-group">
-            <label>Mean Symmetry</label>
-            <input type="number" step="0.001" name="symmetry_mean" min="0" required placeholder="e.g. 0.2419">
-        </div>
-
-        <div class="form-group">
-            <label>Mean Fractal Dimension</label>
-            <input type="number" step="0.001" name="fractal_dimension_mean" min="0" required placeholder="e.g. 0.07871">
-        </div>
-
-        <div class="form-group">
-            <label>SE Radius</label>
-            <input type="number" step="0.001" name="radius_se" min="0" required placeholder="e.g. 1.095">
-        </div>
-
-        <div class="form-group">
-            <label>SE Texture</label>
-            <input type="number" step="0.001" name="texture_se" min="0" required placeholder="e.g. 0.9053">
-        </div>
-
-        <div class="form-group">
-            <label>SE Perimeter</label>
-            <input type="number" step="0.001" name="perimeter_se" min="0" required placeholder="e.g. 8.589">
-        </div>
-
-        <div class="form-group">
-            <label>SE Area</label>
-            <input type="number" step="0.001" name="area_se" min="0" required placeholder="e.g. 153.4">
-        </div>
-
-        <div class="form-group">
-            <label>SE Smoothness</label>
-            <input type="number" step="0.001" name="smoothness_se" min="0" required placeholder="e.g. 0.006399">
-        </div>
-
-        <div class="form-group">
-            <label>SE Compactness</label>
-            <input type="number" step="0.001" name="compactness_se" min="0" required placeholder="e.g. 0.04904">
-        </div>
-
-        <div class="form-group">
-            <label>SE Concavity</label>
-            <input type="number" step="0.001" name="concavity_se" min="0" required placeholder="e.g. 0.05373">
-        </div>
-
-        <div class="form-group">
-            <label>SE Concave Points</label>
-            <input type="number" step="0.001" name="concave_points_se" min="0" required placeholder="e.g. 0.01587">
-        </div>
-
-        <div class="form-group">
-            <label>SE Symmetry</label>
-            <input type="number" step="0.001" name="symmetry_se" min="0" required placeholder="e.g. 0.03003">
-        </div>
-
-        <div class="form-group">
-            <label>SE Fractal Dimension</label>
-            <input type="number" step="0.001" name="fractal_dimension_se" min="0" required placeholder="e.g. 0.006193">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Radius</label>
-            <input type="number" step="0.001" name="radius_worst" min="0" required placeholder="e.g. 25.38">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Texture</label>
-            <input type="number" step="0.001" name="texture_worst" min="0" required placeholder="e.g. 17.33">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Perimeter</label>
-            <input type="number" step="0.001" name="perimeter_worst" min="0" required placeholder="e.g. 184.6">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Area</label>
-            <input type="number" step="0.001" name="area_worst" min="0" required placeholder="e.g. 2019">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Smoothness</label>
-            <input type="number" step="0.001" name="smoothness_worst" min="0" required placeholder="e.g. 0.1622">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Compactness</label>
-            <input type="number" step="0.001" name="compactness_worst" min="0" required placeholder="e.g. 0.6656">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Concavity</label>
-            <input type="number" step="0.001" name="concavity_worst" min="0" required placeholder="e.g. 0.7119">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Concave Points</label>
-            <input type="number" step="0.001" name="concave_points_worst" min="0" required placeholder="e.g. 0.2654">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Symmetry</label>
-            <input type="number" step="0.001" name="symmetry_worst" min="0" required placeholder="e.g. 0.4601">
-        </div>
-
-        <div class="form-group">
-            <label>Worst Fractal Dimension</label>
-            <input type="number" step="0.001" name="fractal_dimension_worst" min="0" required placeholder="e.g. 0.1189">
-        </div>
-
-        <button type="submit">Predict Risk</button>
+      </div>
     </form>
 
+    <!-- Results Section - Full Width Below -->
     {% if probability is not None %}
-        <div class="result-box {% if has_disease %}danger{% endif %}">
-            <h2 class="result-title">
-                {% if has_disease %}
-                    🟥 High Risk – Disease Likely
-                {% else %}
-                    🟩 Low Risk – Disease Unlikely
-                {% endif %}
-            </h2>
-            <div class="prob">{{ probability }}%</div>
-            <p style="font-size:1.1em; margin:0;">
-                Probability of having breast cancer: <strong>{{ probability }}%</strong><br>
-                Probability of NOT having: <strong>{{ no_disease_prob }}%</strong>
-            </p>
+    <div class="results-section" data-aos="fade-up">
+      <div class="results-card {% if is_malignant %}results-malignant{% else %}results-benign{% endif %}">
+        
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-header-left">
+            <div class="results-icon-large">
+              {% if is_malignant %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="results-title-area">
+              <h3>{% if is_malignant %}Malignant Tumor Detected{% else %}Benign Tumor Detected{% endif %}</h3>
+              <p>{% if is_malignant %}Analysis indicates characteristics consistent with malignant (cancerous) tumor. Immediate medical consultation is strongly recommended.{% else %}Analysis indicates characteristics consistent with benign (non-cancerous) tumor. Regular monitoring is still advised.{% endif %}</p>
+            </div>
+          </div>
+          <div class="results-header-right">
+            <div class="main-percentage">{{ probability }}%</div>
+            <div class="main-label">Malignancy Probability</div>
+          </div>
         </div>
+
+        <!-- Results Body -->
+        <div class="results-body">
+          
+          <!-- Stats Grid -->
+          <div class="results-grid">
+            <div class="result-stat-card danger">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+                </svg>
+              </div>
+              <div class="stat-value">{{ probability }}%</div>
+              <div class="stat-label">Malignant Probability</div>
+            </div>
+            <div class="result-stat-card success">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="stat-value">{{ no_cancer_prob }}%</div>
+              <div class="stat-label">Benign Probability</div>
+            </div>
+            <div class="result-stat-card neutral">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="stat-value">{% if is_malignant %}Malignant{% else %}Benign{% endif %}</div>
+              <div class="stat-label">Classification</div>
+            </div>
+          </div>
+
+          <!-- Risk Meter -->
+          <div class="risk-meter-container">
+            <div class="risk-meter-header">
+              <h4>Malignancy Assessment Meter</h4>
+              <span class="risk-badge {% if is_malignant %}malignant{% else %}benign{% endif %}">
+                {% if is_malignant %}Malignant{% else %}Benign{% endif %}
+              </span>
+            </div>
+            <div class="risk-bar-wrapper">
+              <div class="risk-bar-indicator" style="left: calc({{ probability }}% - 2px);"></div>
+            </div>
+            <div class="risk-meter-labels">
+              <span>0% - Likely Benign</span>
+              <span>50% - Uncertain</span>
+              <span>100% - Likely Malignant</span>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="recommendation-grid">
+            <div class="recommendation-card">
+              <div class="rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <div class="rec-content">
+                <h4>{% if is_malignant %}Immediate Action Required{% else %}Continued Monitoring{% endif %}</h4>
+                <p>{% if is_malignant %}Schedule an urgent appointment with an oncologist. Additional diagnostic tests such as core needle biopsy, MRI, or PET scan may be recommended to confirm diagnosis and determine staging.{% else %}While results suggest benign characteristics, continue with regular breast examinations and mammograms as recommended by your healthcare provider. Report any changes promptly.{% endif %}</p>
+              </div>
+            </div>
+            <div class="recommendation-card">
+              <div class="rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                  <line x1="6" y1="1" x2="6" y2="4"/>
+                  <line x1="10" y1="1" x2="10" y2="4"/>
+                  <line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
+              </div>
+              <div class="rec-content">
+                <h4>Health Recommendations</h4>
+                <p>{% if is_malignant %}Maintain a support system and consider joining a cancer support group. Prepare questions for your oncologist about treatment options, side effects, and prognosis. Document your medical history for comprehensive care.{% else %}Maintain a healthy lifestyle with regular exercise and balanced diet. Limit alcohol consumption and avoid smoking. Perform monthly breast self-examinations and keep up with scheduled screenings.{% endif %}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disclaimer -->
+          <div class="results-disclaimer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            <p><strong>Medical Disclaimer:</strong> This prediction is based on a machine learning model trained on the Wisconsin Breast Cancer dataset and should not be considered as medical advice. Only a qualified healthcare professional can provide an accurate diagnosis through proper clinical examination and pathological analysis. This tool is intended for educational and informational purposes only.</p>
+          </div>
+        </div>
+      </div>
+    </div>
     {% endif %}
-</div>
-</body>
-</html>
+
+  </div>
+</section>
+{% endblock %}

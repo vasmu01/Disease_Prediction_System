@@ -1,114 +1,1376 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Heart Disease Risk Assessment</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
-    .container { max-width: 520px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    h1 { text-align: center; color: #c0392b; }
-    label { display: block; margin: 14px 0 6px; font-weight: bold; color: #2c3e50; }
-    input, select { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-    button { width: 100%; padding: 14px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 1.1rem; margin-top: 25px; cursor: pointer; }
-    button:hover { background: #a93226; }
-    .error { color: #c0392b; text-align: center; margin: 10px 0; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>❤️ Heart Disease Risk Assessment</h1>
+<!-- templates/heartprediction.html -->
+{% extends 'base.html' %}
+{% load static %}
 
-    {% if error %}
-      <p class="error">{{ error }}</p>
+{% block title %}Heart Disease Prediction | VitaPredica{% endblock %}
+
+{% block nav_links %}
+<nav class="nav-links">
+  <a href="{% url 'home' %}">Home</a>
+  <a href="#guide">Parameter Guide</a>
+  <div class="nav-cta">
+    {% if user.is_authenticated %}
+      <span>Hi, {{ user.username }}</span>
+      <a href="{% url 'logout' %}" class="ghost-link">/ Logout</a>
+    {% else %}
+      <a href="{% url 'signup' %}" class="ghost-link">Sign in / Log in</a>
     {% endif %}
-
-    <form method="post">
-      {% csrf_token %}
-
-      <label>Age</label>
-      <input type="number" name="age" min="20" max="100" step="1" required>
-
-      <label>Sex (1 = Male, 0 = Female)</label>
-      <select name="sex" required>
-        <option value="1">Male</option>
-        <option value="0">Female</option>
-      </select>
-
-      <label>Chest Pain Type (cp)</label>
-      <select name="cp" required>
-        <option value="0">Typical angina</option>
-        <option value="1">Atypical angina</option>
-        <option value="2">Non-anginal pain</option>
-        <option value="3">Asymptomatic</option>
-      </select>
-
-      <label>Resting Blood Pressure (trestbps, mm Hg)</label>
-      <input type="number" name="trestbps" min="80" max="220" step="1" required>
-
-      <label>Serum Cholesterol (chol, mg/dl)</label>
-      <input type="number" name="chol" min="100" max="600" step="1" required>
-
-      <label>Fasting Blood Sugar > 120 mg/dl (fbs)</label>
-      <select name="fbs" required>
-        <option value="1">Yes</option>
-        <option value="0">No</option>
-      </select>
-
-      <label>Resting Electrocardiographic Results (restecg)</label>
-      <select name="restecg" required>
-        <option value="0">Normal</option>
-        <option value="1">Having ST-T wave abnormality</option>
-        <option value="2">Showing probable or definite left ventricular hypertrophy</option>
-      </select>
-
-      <label>Maximum Heart Rate Achieved (thalach)</label>
-      <input type="number" name="thalach" min="60" max="220" step="1" required>
-
-      <label>Exercise Induced Angina (exang)</label>
-      <select name="exang" required>
-        <option value="1">Yes</option>
-        <option value="0">No</option>
-      </select>
-
-      <label>ST Depression Induced by Exercise (oldpeak)</label>
-      <input type="number" name="oldpeak" min="0" max="10" step="0.1" required>
-
-      <label>Slope of Peak Exercise ST Segment (slope)</label>
-      <select name="slope" required>
-        <option value="0">Upsloping</option>
-        <option value="1">Flat</option>
-        <option value="2">Downsloping</option>
-      </select>
-
-      <label>Number of Major Vessels Colored by Fluoroscopy (ca, 0–3)</label>
-      <input type="number" name="ca" min="0" max="3" step="1" required>
-
-      <label>Thalassemia (thal)</label>
-      <select name="thal" required>
-        <option value="3">Normal</option>
-        <option value="6">Fixed defect</option>
-        <option value="7">Reversible defect</option>
-      </select>
-
-      <button type="submit">Check Risk →</button>
-    </form>
   </div>
-    {% if probability is not None %}
-        <div class="result-box {% if has_disease %}danger{% endif %}">
-            <h2 class="result-title">
-                {% if has_disease %}
-                    🟥 High Risk – Disease Likely
-                {% else %}
-                    🟩 Low Risk – Disease Unlikely
-                {% endif %}
-            </h2>
-            <div class="prob">{{ probability }}%</div>
-            <p style="font-size:1.1em; margin:0;">
-                Probability of having heart disease: <strong>{{ probability }}%</strong><br>
-                Probability of NOT having: <strong>{{ no_disease_prob }}%</strong>
-            </p>
+</nav>
+{% endblock %}
+
+{% block content %}
+<style>
+  /* Heart Prediction Page Styles */
+  .prediction-hero {
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 6vw 60px;
+    background: linear-gradient(135deg, #000 0%, #0a0a0a 50%, #000 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prediction-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .prediction-hero-content {
+    text-align: center;
+    max-width: 700px;
+    z-index: 1;
+  }
+
+  .prediction-hero .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 13px;
+    margin-bottom: 24px;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .prediction-hero h1 {
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .prediction-hero p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+  }
+
+  /* Main Content */
+  .prediction-content {
+    padding: 60px 6vw 80px;
+    background: #f5f5f5;
+  }
+
+  .prediction-wrapper {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .prediction-container {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 0;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.08);
+  }
+
+  @media (max-width: 1024px) {
+    .prediction-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Left Side - Guide (Dark) */
+  .guide-section {
+    padding: 40px;
+    background: #0a0a0a;
+    color: #fff;
+  }
+
+  @media (max-width: 1024px) {
+    .guide-section {
+      padding: 24px;
+    }
+  }
+
+  .guide-section .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+  }
+
+  .guide-section h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-left: 16px;
+    border-left: 3px solid #fff;
+  }
+
+  .guide-section > p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .guide-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .guide-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .guide-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .guide-list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+  }
+
+  .guide-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+  }
+
+  .guide-category {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.4);
+    margin-top: 12px;
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+
+  .guide-category:first-of-type {
+    margin-top: 0;
+  }
+
+  .guide-item {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .guide-item:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .guide-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .guide-item strong {
+    font-size: 13px;
+    color: #fff;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .guide-item .short-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .guide-item .range {
+    background: #fff;
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .guide-item .range.select {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+
+  /* Expanded Details */
+  .guide-item .details {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    opacity: 0;
+  }
+
+  .guide-item:hover .details {
+    max-height: 350px;
+    opacity: 1;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .guide-item .details p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .guide-item .details .options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .guide-item .details .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .guide-item .details .option-value {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    min-width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .guide-item .details .tip {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #ffc107;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .guide-item .details .tip svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Right Side - Form (White) */
+  .form-section {
+    padding: 40px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    .form-section {
+      padding: 24px;
+    }
+  }
+
+  .form-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #737373;
+    margin-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-row.three-col {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  @media (max-width: 768px) {
+    .form-row,
+    .form-row.three-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #171717;
+  }
+
+  .form-group label .required {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #0a0a0a;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #0a0a0a;
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.08);
+  }
+
+  .form-group input::placeholder {
+    color: #a3a3a3;
+  }
+
+  .form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 44px;
+  }
+
+  .btn-predict {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 10px;
+    border: none;
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-predict:hover {
+    background: #262626;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+
+  .btn-predict:active {
+    transform: scale(0.98);
+  }
+
+  /* Results Section - Full Width Below */
+  .results-section {
+    margin-top: 40px;
+    animation: fadeInUp 0.6s ease;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .results-card {
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.08);
+  }
+
+  /* Results Header */
+  .results-header {
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  @media (max-width: 768px) {
+    .results-header {
+      flex-direction: column;
+      text-align: center;
+      padding: 32px 24px;
+    }
+  }
+
+  .results-success .results-header {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+
+  .results-danger .results-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+
+  .results-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .results-header-left {
+      flex-direction: column;
+    }
+  }
+
+  .results-icon-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .results-icon-large svg {
+    width: 40px;
+    height: 40px;
+    color: #fff;
+  }
+
+  .results-title-area h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .results-title-area p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.9);
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .results-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  @media (max-width: 768px) {
+    .results-header-right {
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  .results-header-right .main-percentage {
+    font-size: 56px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .results-header-right .main-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 4px;
+  }
+
+  /* Results Body */
+  .results-body {
+    padding: 40px 48px;
+  }
+
+  @media (max-width: 768px) {
+    .results-body {
+      padding: 24px;
+    }
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 900px) {
+    .results-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .result-stat-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .result-stat-card:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    transform: translateY(-4px);
+  }
+
+  .result-stat-card .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .result-stat-card .stat-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .result-stat-card.danger .stat-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .result-stat-card.success .stat-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .result-stat-card.neutral .stat-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+
+  .result-stat-card .stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .result-stat-card.danger .stat-value {
+    color: #ef4444;
+  }
+
+  .result-stat-card.success .stat-value {
+    color: #22c55e;
+  }
+
+  .result-stat-card.neutral .stat-value {
+    color: #3b82f6;
+  }
+
+  .result-stat-card .stat-label {
+    font-size: 13px;
+    color: #737373;
+    font-weight: 500;
+  }
+
+  /* Risk Meter */
+  .risk-meter-container {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+
+  .risk-meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .risk-meter-header h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #171717;
+  }
+
+  .risk-meter-header .risk-badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .risk-meter-header .risk-badge.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .risk-meter-header .risk-badge.low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .risk-bar-wrapper {
+    position: relative;
+    height: 16px;
+    background: linear-gradient(90deg, #22c55e 0%, #fbbf24 50%, #ef4444 100%);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .risk-bar-indicator {
+    position: absolute;
+    top: -8px;
+    width: 4px;
+    height: 32px;
+    background: #0a0a0a;
+    border-radius: 2px;
+    transition: left 1s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .risk-bar-indicator::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #0a0a0a;
+  }
+
+  .risk-meter-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .risk-meter-labels span {
+    font-size: 12px;
+    color: #737373;
+  }
+
+  /* Recommendation Section */
+  .recommendation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .recommendation-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .recommendation-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    gap: 20px;
+  }
+
+  .recommendation-card .rec-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .recommendation-card .rec-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .results-success .recommendation-card .rec-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .results-danger .recommendation-card .rec-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .recommendation-card .rec-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #171717;
+    margin-bottom: 8px;
+  }
+
+  .recommendation-card .rec-content p {
+    font-size: 13px;
+    color: #525252;
+    line-height: 1.6;
+  }
+
+  /* Disclaimer */
+  .results-disclaimer {
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .results-disclaimer svg {
+    flex-shrink: 0;
+    color: #0284c7;
+  }
+
+  .results-disclaimer p {
+    font-size: 13px;
+    color: #0369a1;
+    line-height: 1.6;
+  }
+
+  /* Error */
+  .error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .error-message svg {
+    flex-shrink: 0;
+  }
+</style>
+
+<!-- Hero Section -->
+<section class="prediction-hero" data-aos="fade-up">
+  <div class="prediction-hero-content">
+    <div class="badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      Heart Health Analysis
+    </div>
+    <h1>Heart Disease Prediction</h1>
+    <p>Enter your clinical parameters below to assess your heart disease risk using our advanced machine learning model trained on medical datasets.</p>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="prediction-content">
+  <div class="prediction-wrapper">
+    
+    <!-- Form Container -->
+    <form method="POST">
+      {% csrf_token %}
+      <div class="prediction-container" data-aos="fade-up" data-aos-delay="100">
+        
+        <!-- Left Side - Guide (Dark) -->
+        <div class="guide-section" id="guide">
+          <p class="section-label">Parameter Guide</p>
+          <h2>Health Assessment</h2>
+          <p>This tool uses 13 clinical features to predict heart disease likelihood. Hover over each parameter to learn more.</p>
+          
+          <div class="guide-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            All Parameters
+          </div>
+          
+          <div class="guide-list">
+            <!-- Basic Information -->
+            <p class="guide-category">Basic Information</p>
+            
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Age</strong>
+                  <span class="short-desc">Patient's age in years</span>
+                </div>
+                <span class="range">29 - 77</span>
+              </div>
+              <div class="details">
+                <p>Age is a significant risk factor for heart disease. Risk increases with age, especially after 45 for men and 55 for women.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Enter your current age. Example: 54
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Sex</strong>
+                  <span class="short-desc">Biological sex of patient</span>
+                </div>
+                <span class="range select">Select</span>
+              </div>
+              <div class="details">
+                <p>Men generally have a higher risk of heart disease than pre-menopausal women.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">1</span> Male</div>
+                  <div class="option"><span class="option-value">0</span> Female</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Chest Pain Type (cp)</strong>
+                  <span class="short-desc">Type of chest pain experienced</span>
+                </div>
+                <span class="range select">0 - 3</span>
+              </div>
+              <div class="details">
+                <p>Chest pain type is a key indicator of heart disease.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">0</span> Typical Angina</div>
+                  <div class="option"><span class="option-value">1</span> Atypical Angina</div>
+                  <div class="option"><span class="option-value">2</span> Non-anginal Pain</div>
+                  <div class="option"><span class="option-value">3</span> Asymptomatic</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vital Signs -->
+            <p class="guide-category">Vital Signs</p>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Resting BP (trestbps)</strong>
+                  <span class="short-desc">Blood pressure at rest in mm Hg</span>
+                </div>
+                <span class="range">94 - 200</span>
+              </div>
+              <div class="details">
+                <p>High blood pressure is a major risk factor for heart disease.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;120</span> Normal</div>
+                  <div class="option"><span class="option-value">120-139</span> Elevated</div>
+                  <div class="option"><span class="option-value">&gt;140</span> High</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Cholesterol (chol)</strong>
+                  <span class="short-desc">Serum cholesterol in mg/dl</span>
+                </div>
+                <span class="range">126 - 564</span>
+              </div>
+              <div class="details">
+                <p>High cholesterol contributes to plaque buildup in arteries.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;200</span> Desirable</div>
+                  <div class="option"><span class="option-value">200-239</span> Borderline</div>
+                  <div class="option"><span class="option-value">&gt;240</span> High</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Max Heart Rate (thalach)</strong>
+                  <span class="short-desc">Maximum heart rate achieved</span>
+                </div>
+                <span class="range">71 - 202</span>
+              </div>
+              <div class="details">
+                <p>Maximum heart rate achieved during exercise stress test.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Target = 220 - age. Example: 170 bpm
+                </div>
+              </div>
+            </div>
+
+            <!-- Blood & ECG -->
+            <p class="guide-category">Blood & ECG</p>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Fasting Blood Sugar (fbs)</strong>
+                  <span class="short-desc">Blood sugar after fasting</span>
+                </div>
+                <span class="range select">0 / 1</span>
+              </div>
+              <div class="details">
+                <p>Fasting blood sugar > 120 mg/dl indicates diabetes risk.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">0</span> Normal (&le;120)</div>
+                  <div class="option"><span class="option-value">1</span> Elevated (&gt;120)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Resting ECG (restecg)</strong>
+                  <span class="short-desc">ECG results at rest</span>
+                </div>
+                <span class="range select">0 - 2</span>
+              </div>
+              <div class="details">
+                <p>Electrocardiogram results at rest.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">0</span> Normal</div>
+                  <div class="option"><span class="option-value">1</span> ST-T abnormality</div>
+                  <div class="option"><span class="option-value">2</span> LV hypertrophy</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exercise -->
+            <p class="guide-category">Exercise Test</p>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Exercise Angina (exang)</strong>
+                  <span class="short-desc">Chest pain during exercise</span>
+                </div>
+                <span class="range select">0 / 1</span>
+              </div>
+              <div class="details">
+                <p>Strong indicator of coronary artery disease.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">0</span> No</div>
+                  <div class="option"><span class="option-value">1</span> Yes</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>ST Depression (oldpeak)</strong>
+                  <span class="short-desc">ST segment depression</span>
+                </div>
+                <span class="range">0.0 - 6.2</span>
+              </div>
+              <div class="details">
+                <p>ST depression induced by exercise relative to rest.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Enter decimal value. Example: 1.4
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>ST Slope (slope)</strong>
+                  <span class="short-desc">Peak exercise ST slope</span>
+                </div>
+                <span class="range select">0 - 2</span>
+              </div>
+              <div class="details">
+                <p>Downsloping indicates higher risk.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">0</span> Upsloping</div>
+                  <div class="option"><span class="option-value">1</span> Flat</div>
+                  <div class="option"><span class="option-value">2</span> Downsloping</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Major Vessels (ca)</strong>
+                  <span class="short-desc">Vessels by fluoroscopy</span>
+                </div>
+                <span class="range select">0 - 3</span>
+              </div>
+              <div class="details">
+                <p>More vessels = more severe disease.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">0</span> None</div>
+                  <div class="option"><span class="option-value">1-3</span> Affected vessels</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Thalassemia (thal)</strong>
+                  <span class="short-desc">Thallium stress test</span>
+                </div>
+                <span class="range select">1 - 3</span>
+              </div>
+              <div class="details">
+                <p>Blood flow to heart during exercise.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">1</span> Normal</div>
+                  <div class="option"><span class="option-value">2</span> Fixed Defect</div>
+                  <div class="option"><span class="option-value">3</span> Reversible</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Right Side - Form (White) -->
+        <div class="form-section">
+          <!-- Basic Info -->
+          <p class="form-section-title">Basic Information</p>
+          <div class="form-row three-col">
+            <div class="form-group">
+              <label>Age <span class="required">*</span></label>
+              <input type="number" name="age" placeholder="e.g. 54" min="1" max="120" required>
+            </div>
+            <div class="form-group">
+              <label>Sex <span class="required">*</span></label>
+              <select name="sex" required>
+                <option value="" disabled selected>Select</option>
+                <option value="1">Male</option>
+                <option value="0">Female</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Chest Pain Type (cp) <span class="required">*</span></label>
+              <select name="cp" required>
+                <option value="" disabled selected>Select type</option>
+                <option value="0">Typical Angina</option>
+                <option value="1">Atypical Angina</option>
+                <option value="2">Non-anginal Pain</option>
+                <option value="3">Asymptomatic</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Vital Signs -->
+          <p class="form-section-title">Vital Signs</p>
+          <div class="form-row three-col">
+            <div class="form-group">
+              <label>Resting BP (trestbps) <span class="required">*</span></label>
+              <input type="number" name="trestbps" placeholder="e.g. 130" min="50" max="250" required>
+            </div>
+            <div class="form-group">
+              <label>Cholesterol (chol) <span class="required">*</span></label>
+              <input type="number" name="chol" placeholder="e.g. 250" min="100" max="600" required>
+            </div>
+            <div class="form-group">
+              <label>Max Heart Rate (thalach) <span class="required">*</span></label>
+              <input type="number" name="thalach" placeholder="e.g. 150" min="50" max="250" required>
+            </div>
+          </div>
+
+          <!-- Blood & ECG -->
+          <p class="form-section-title">Blood & ECG Results</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fasting Blood Sugar (fbs) <span class="required">*</span></label>
+              <select name="fbs" required>
+                <option value="" disabled selected>Select</option>
+                <option value="0">Less than 120 mg/dl</option>
+                <option value="1">Greater than 120 mg/dl</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Resting ECG (restecg) <span class="required">*</span></label>
+              <select name="restecg" required>
+                <option value="" disabled selected>Select result</option>
+                <option value="0">Normal</option>
+                <option value="1">ST-T Abnormality</option>
+                <option value="2">Left Ventricular Hypertrophy</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Exercise Results -->
+          <p class="form-section-title">Exercise Test Results</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Exercise Induced Angina (exang) <span class="required">*</span></label>
+              <select name="exang" required>
+                <option value="" disabled selected>Select</option>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>ST Depression (oldpeak) <span class="required">*</span></label>
+              <input type="number" name="oldpeak" placeholder="e.g. 1.4" step="0.1" min="0" max="10" required>
+            </div>
+          </div>
+
+          <div class="form-row three-col">
+            <div class="form-group">
+              <label>ST Slope (slope) <span class="required">*</span></label>
+              <select name="slope" required>
+                <option value="" disabled selected>Select slope</option>
+                <option value="0">Upsloping</option>
+                <option value="1">Flat</option>
+                <option value="2">Downsloping</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Major Vessels (ca) <span class="required">*</span></label>
+              <select name="ca" required>
+                <option value="" disabled selected>Select count</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Thalassemia (thal) <span class="required">*</span></label>
+              <select name="thal" required>
+                <option value="" disabled selected>Select type</option>
+                <option value="1">Normal</option>
+                <option value="2">Fixed Defect</option>
+                <option value="3">Reversible Defect</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-predict">Predict Risk</button>
+
+          {% if error %}
+          <div class="error-message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span><strong>Error:</strong> {{ error }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+
+    <!-- Results Section - Full Width Below -->
+    {% if probability is not None %}
+    <div class="results-section" data-aos="fade-up">
+      <div class="results-card {% if has_disease %}results-danger{% else %}results-success{% endif %}">
+        
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-header-left">
+            <div class="results-icon-large">
+              {% if has_disease %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="results-title-area">
+              <h3>{% if has_disease %}High Risk Detected{% else %}Low Risk Detected{% endif %}</h3>
+              <p>{% if has_disease %}Our analysis indicates elevated risk factors. Please consult a healthcare professional for comprehensive evaluation.{% else %}Your results suggest a lower likelihood of heart disease. Continue maintaining healthy habits.{% endif %}</p>
+            </div>
+          </div>
+          <div class="results-header-right">
+            <div class="main-percentage">{{ probability }}%</div>
+            <div class="main-label">Risk Score</div>
+          </div>
+        </div>
+
+        <!-- Results Body -->
+        <div class="results-body">
+          
+          <!-- Stats Grid -->
+          <div class="results-grid">
+            <div class="result-stat-card danger">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </div>
+              <div class="stat-value">{{ probability }}%</div>
+              <div class="stat-label">Disease Probability</div>
+            </div>
+            <div class="result-stat-card success">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="stat-value">{{ no_disease_prob }}%</div>
+              <div class="stat-label">Healthy Probability</div>
+            </div>
+            <div class="result-stat-card neutral">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="stat-value">{% if probability > 50 %}High{% elif probability > 30 %}Moderate{% else %}Low{% endif %}</div>
+              <div class="stat-label">Risk Category</div>
+            </div>
+          </div>
+
+          <!-- Risk Meter -->
+          <div class="risk-meter-container">
+            <div class="risk-meter-header">
+              <h4>Risk Assessment Meter</h4>
+              <span class="risk-badge {% if has_disease %}high{% else %}low{% endif %}">
+                {% if has_disease %}Elevated Risk{% else %}Normal Range{% endif %}
+              </span>
+            </div>
+            <div class="risk-bar-wrapper">
+              <div class="risk-bar-indicator" style="left: calc({{ probability }}% - 2px);"></div>
+            </div>
+            <div class="risk-meter-labels">
+              <span>0% - Low Risk</span>
+              <span>50% - Moderate</span>
+              <span>100% - High Risk</span>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="recommendation-grid">
+            <div class="recommendation-card">
+              <div class="rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <div class="rec-content">
+                <h4>{% if has_disease %}Immediate Action{% else %}Preventive Care{% endif %}</h4>
+                <p>{% if has_disease %}Schedule an appointment with a cardiologist for detailed examination and diagnostic tests like ECG, echocardiogram, or stress test.{% else %}Continue regular health check-ups annually. Monitor blood pressure and cholesterol levels every 6 months.{% endif %}</p>
+              </div>
+            </div>
+            <div class="recommendation-card">
+              <div class="rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                  <line x1="6" y1="1" x2="6" y2="4"/>
+                  <line x1="10" y1="1" x2="10" y2="4"/>
+                  <line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
+              </div>
+              <div class="rec-content">
+                <h4>Lifestyle Recommendations</h4>
+                <p>{% if has_disease %}Adopt a heart-healthy diet low in sodium and saturated fats. Engage in moderate exercise as approved by your doctor. Quit smoking if applicable.{% else %}Maintain a balanced diet rich in fruits, vegetables, and whole grains. Exercise at least 150 minutes per week. Manage stress effectively.{% endif %}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disclaimer -->
+          <div class="results-disclaimer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            <p><strong>Medical Disclaimer:</strong> This prediction is based on a machine learning model and should not be considered as medical advice. Always consult with a qualified healthcare professional for proper diagnosis and treatment. This tool is intended for educational and informational purposes only.</p>
+          </div>
+        </div>
+      </div>
+    </div>
     {% endif %}
-</body>
-</html>
+
+  </div>
+</section>
+{% endblock %}
