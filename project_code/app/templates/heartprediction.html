@@ -1,135 +1,114 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Heart Disease Prediction</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            color: #111;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0 15px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        label {
-            font-weight: bold;
-        }
-        .btn {
-            padding: 10px 20px;
-            background: #111;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:hover { background: #333; }
-        .error { color: red; margin-bottom: 10px; }
-        .result { background: #eee; padding: 20px; margin-top: 20px; border-radius: 8px; }
-        .suggestion { margin: 5px 0; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart Disease Risk Assessment</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+    .container { max-width: 520px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h1 { text-align: center; color: #c0392b; }
+    label { display: block; margin: 14px 0 6px; font-weight: bold; color: #2c3e50; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+    button { width: 100%; padding: 14px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 1.1rem; margin-top: 25px; cursor: pointer; }
+    button:hover { background: #a93226; }
+    .error { color: #c0392b; text-align: center; margin: 10px 0; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>❤️ Heart Disease Prediction System</h2>
+  <div class="container">
+    <h1>❤️ Heart Disease Risk Assessment</h1>
 
-        {% if errors %}
-            <div class="error">
-                <ul>
-                {% for err in errors %}
-                    <li>{{ err }}</li>
-                {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
 
-        <form method="POST">
-            {% csrf_token %}
-            
-            <label for="age">Age:</label>
-            <input type="number" name="age" id="age" min="20" max="90" value="{{ user_input.age|default:'' }}">
+    <form method="post">
+      {% csrf_token %}
 
-            <label for="sex">Sex:</label>
-            <select name="sex" id="sex">
-                <option value="0" {% if user_input.sex == 0 %}selected{% endif %}>Female</option>
-                <option value="1" {% if user_input.sex == 1 %}selected{% endif %}>Male</option>
-                <option value="2" {% if user_input.sex == 2 %}selected{% endif %}>Custom</option>
-            </select>
+      <label>Age</label>
+      <input type="number" name="age" min="20" max="100" step="1" required>
 
-            <label for="cp">Chest Pain Type (cp: 0-3):</label>
-            <input type="number" name="cp" id="cp" min="0" max="3" value="{{ user_input.cp|default:'' }}">
+      <label>Sex (1 = Male, 0 = Female)</label>
+      <select name="sex" required>
+        <option value="1">Male</option>
+        <option value="0">Female</option>
+      </select>
 
-            <label for="trestbps">Resting Blood Pressure (90-200):</label>
-            <input type="number" name="trestbps" id="trestbps" min="90" max="200" value="{{ user_input.trestbps|default:'' }}">
+      <label>Chest Pain Type (cp)</label>
+      <select name="cp" required>
+        <option value="0">Typical angina</option>
+        <option value="1">Atypical angina</option>
+        <option value="2">Non-anginal pain</option>
+        <option value="3">Asymptomatic</option>
+      </select>
 
-            <label for="chol">Cholesterol (100-400):</label>
-            <input type="number" name="chol" id="chol" min="100" max="400" value="{{ user_input.chol|default:'' }}">
+      <label>Resting Blood Pressure (trestbps, mm Hg)</label>
+      <input type="number" name="trestbps" min="80" max="220" step="1" required>
 
-            <label for="fbs">Fasting Blood Sugar (0 = <=120, 1 = >120):</label>
-            <select name="fbs" id="fbs">
-                <option value="0" {% if user_input.fbs == 0 %}selected{% endif %}>0</option>
-                <option value="1" {% if user_input.fbs == 1 %}selected{% endif %}>1</option>
-            </select>
+      <label>Serum Cholesterol (chol, mg/dl)</label>
+      <input type="number" name="chol" min="100" max="600" step="1" required>
 
-            <label for="restecg">Resting ECG (0-2):</label>
-            <input type="number" name="restecg" id="restecg" min="0" max="2" value="{{ user_input.restecg|default:'' }}">
+      <label>Fasting Blood Sugar > 120 mg/dl (fbs)</label>
+      <select name="fbs" required>
+        <option value="1">Yes</option>
+        <option value="0">No</option>
+      </select>
 
-            <label for="thalach">Max Heart Rate Achieved (70-210):</label>
-            <input type="number" name="thalach" id="thalach" min="70" max="210" value="{{ user_input.thalach|default:'' }}">
+      <label>Resting Electrocardiographic Results (restecg)</label>
+      <select name="restecg" required>
+        <option value="0">Normal</option>
+        <option value="1">Having ST-T wave abnormality</option>
+        <option value="2">Showing probable or definite left ventricular hypertrophy</option>
+      </select>
 
-            <label for="exang">Exercise Induced Angina (0 = No, 1 = Yes):</label>
-            <select name="exang" id="exang">
-                <option value="0" {% if user_input.exang == 0 %}selected{% endif %}>0</option>
-                <option value="1" {% if user_input.exang == 1 %}selected{% endif %}>1</option>
-            </select>
+      <label>Maximum Heart Rate Achieved (thalach)</label>
+      <input type="number" name="thalach" min="60" max="220" step="1" required>
 
-            <label for="oldpeak">ST Depression (0-6):</label>
-            <input type="number" step="0.1" name="oldpeak" id="oldpeak" min="0" max="3" value="{{ user_input.oldpeak|default:'' }}">
+      <label>Exercise Induced Angina (exang)</label>
+      <select name="exang" required>
+        <option value="1">Yes</option>
+        <option value="0">No</option>
+      </select>
 
-            <label for="slope">Slope of ST Segment (0-2):</label>
-            <input type="number" name="slope" id="slope" min="0" max="2" value="{{ user_input.slope|default:'' }}">
+      <label>ST Depression Induced by Exercise (oldpeak)</label>
+      <input type="number" name="oldpeak" min="0" max="10" step="0.1" required>
 
-            <label for="ca">Number of Major Vessels (0-4):</label>
-            <input type="number" name="ca" id="ca" min="0" max="4" value="{{ user_input.ca|default:'' }}">
+      <label>Slope of Peak Exercise ST Segment (slope)</label>
+      <select name="slope" required>
+        <option value="0">Upsloping</option>
+        <option value="1">Flat</option>
+        <option value="2">Downsloping</option>
+      </select>
 
-            <label for="thal">Thal (0-3):</label>
-            <input type="number" name="thal" id="thal" min="0" max="3" value="{{ user_input.thal|default:'' }}">
+      <label>Number of Major Vessels Colored by Fluoroscopy (ca, 0–3)</label>
+      <input type="number" name="ca" min="0" max="3" step="1" required>
 
-            <button type="submit" class="btn">Predict</button>
-        </form>
+      <label>Thalassemia (thal)</label>
+      <select name="thal" required>
+        <option value="3">Normal</option>
+        <option value="6">Fixed defect</option>
+        <option value="7">Reversible defect</option>
+      </select>
 
-        {% if prediction is not None %}
-        <div class="result">
-            <h3>📊 Prediction Result</h3>
-            <p><strong>Heart Disease Probability:</strong> {{ probability }}%</p>
-            {% if prediction == 1 %}
-                <p style="color:red;">🟥 Result: Person HAS Heart Disease</p>
-            {% else %}
-                <p style="color:green;">🟩 Result: Person does NOT have Heart Disease</p>
-            {% endif %}
-
-            <h4>💡 Suggestions:</h4>
-            <ul>
-                {% for s in suggestions %}
-                    <li class="suggestion">{{ s }}</li>
-                {% endfor %}
-            </ul>
+      <button type="submit">Check Risk →</button>
+    </form>
+  </div>
+    {% if probability is not None %}
+        <div class="result-box {% if has_disease %}danger{% endif %}">
+            <h2 class="result-title">
+                {% if has_disease %}
+                    🟥 High Risk – Disease Likely
+                {% else %}
+                    🟩 Low Risk – Disease Unlikely
+                {% endif %}
+            </h2>
+            <div class="prob">{{ probability }}%</div>
+            <p style="font-size:1.1em; margin:0;">
+                Probability of having heart disease: <strong>{{ probability }}%</strong><br>
+                Probability of NOT having: <strong>{{ no_disease_prob }}%</strong>
+            </p>
         </div>
-        {% endif %}
-    </div>
+    {% endif %}
 </body>
 </html>

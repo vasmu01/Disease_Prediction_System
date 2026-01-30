@@ -1,107 +1,97 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Lung Cancer Prediction</title>
-    <style>
-        body { font-family: Arial; background:#f5f5f5; color:#111; padding:20px; }
-        .container { max-width:800px; margin:auto; background:#fff; padding:30px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1);}
-        input, select { width:100%; padding:8px; margin:5px 0 15px; border-radius:5px; border:1px solid #ccc; }
-        label { font-weight:bold; }
-        .btn { padding:10px 20px; background:#111; color:#fff; border:none; border-radius:5px; cursor:pointer; }
-        .btn:hover { background:#333; }
-        .error { color:red; margin-bottom:10px; }
-        .result { background:#eee; padding:20px; margin-top:20px; border-radius:8px; }
-        .suggestion { margin:5px 0; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lung Cancer Risk Assessment</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; }
+    .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2c3e50; }
+    label { display: block; margin: 12px 0 5px; font-weight: bold; }
+    select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 14px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-size: 1.1rem; margin-top: 20px; cursor: pointer; }
+    button:hover { background: #c0392b; }
+    .error { color: red; text-align: center; margin-top: 10px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🫁 Lung Cancer Prediction System</h2>
+  <div class="container">
+    <h1>🫁 Lung Cancer Risk Assessment</h1>
+    
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
 
-        {% if errors %}
-            <div class="error">
-                <ul>
-                {% for err in errors %}
-                    <li>{{ err }}</li>
-                {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+    <form method="post">
+      {% csrf_token %}
 
-        <form method="POST">
-            {% csrf_token %}
-            
-            <label>Gender (M=1, F=0):</label>
-            <select name="gender">
-                <option value="1" {% if user_input.gender == 1 %}selected{% endif %}>Male</option>
-                <option value="0" {% if user_input.gender == 0 %}selected{% endif %}>Female</option>
-            </select>
+      <label>Gender</label>
+      <select name="gender" required>
+        <option value="1">Male</option>
+        <option value="0">Female</option>
+      </select>
 
-            <label>Age:</label>
-            <input type="number" name="age" min="1" max="120" value="{{ user_input.age|default:'' }}">
+      <label>Age</label>
+      <input type="number" name="age" min="1" max="120" required>
 
-            <label>Smoking:</label>
-            <input type="number" name="smoking" min="0" max="1" value="{{ user_input.smoking|default:'' }}">
+      <label>Smoking</label>
+      <select name="smoking" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Yellow Fingers:</label>
-            <input type="number" name="yellow_fingers" min="0" max="1" value="{{ user_input.yellow_fingers|default:'' }}">
+      <label>Yellow Fingers</label>
+      <select name="yellow_fingers" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Anxiety:</label>
-            <input type="number" name="anxiety" min="0" max="1" value="{{ user_input.anxiety|default:'' }}">
+      <label>Anxiety</label>
+      <select name="anxiety" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Peer Pressure:</label>
-            <input type="number" name="peer_pressure" min="0" max="1" value="{{ user_input.peer_pressure|default:'' }}">
+      <label>Peer Pressure</label>
+      <select name="peer_pressure" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Chronic Disease:</label>
-            <input type="number" name="chronic_disease" min="0" max="1" value="{{ user_input.chronic_disease|default:'' }}">
+      <label>Chronic Disease</label>
+      <select name="chronic_disease" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Fatigue:</label>
-            <input type="number" name="fatigue" min="0" max="1" value="{{ user_input.fatigue|default:'' }}">
+      <label>Fatigue</label>
+      <select name="fatigue" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Allergy:</label>
-            <input type="number" name="allergy" min="0" max="1" value="{{ user_input.allergy|default:'' }}">
+      <label>Allergy</label>
+      <select name="allergy" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Wheezing:</label>
-            <input type="number" name="wheezing" min="0" max="1" value="{{ user_input.wheezing|default:'' }}">
+      <label>Wheezing</label>
+      <select name="wheezing" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Alcohol:</label>
-            <input type="number" name="alcohol" min="0" max="1" value="{{ user_input.alcohol|default:'' }}">
+      <label>Alcohol Consuming</label>
+      <select name="alcohol" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Coughing:</label>
-            <input type="number" name="coughing" min="0" max="1" value="{{ user_input.coughing|default:'' }}">
+      <label>Coughing</label>
+      <select name="coughing" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Shortness of Breath:</label>
-            <input type="number" name="shortness_breath" min="0" max="1" value="{{ user_input.shortness_breath|default:'' }}">
+      <label>Shortness of Breath</label>
+      <select name="shortness_breath" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Swallowing Difficulty:</label>
-            <input type="number" name="swallowing" min="0" max="1" value="{{ user_input.swallowing|default:'' }}">
+      <label>Swallowing Difficulty</label>
+      <select name="swallowing" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <label>Chest Pain:</label>
-            <input type="number" name="chest_pain" min="0" max="1" value="{{ user_input.chest_pain|default:'' }}">
+      <label>Chest Pain</label>
+      <select name="chest_pain" required><option value="1">Yes</option><option value="0">No</option></select>
 
-            <button type="submit" class="btn">Predict</button>
-        </form>
-
-        {% if prediction is not None %}
-        <div class="result">
-            <h3>📊 Prediction Result</h3>
-            <p><strong>Disease Probability:</strong> {{ probability }}%</p>
-            {% if prediction == 1 %}
-                <p style="color:red;">🟥 Result: Person HAS Disease</p>
-            {% else %}
-                <p style="color:green;">🟩 Result: Person does NOT have Disease</p>
-            {% endif %}
-
-            <h4>💡 Suggestions:</h4>
-            <ul>
-                {% for s in suggestions %}
-                    <li class="suggestion">{{ s }}</li>
-                {% endfor %}
-            </ul>
+      <button type="submit">Check Risk →</button>
+    </form>
+  </div>
+    {% if probability is not None %}
+        <div class="result-box {% if has_disease %}danger{% endif %}">
+            <h2 class="result-title">
+                {% if has_disease %}
+                    🟥 High Risk – Disease Likely
+                {% else %}
+                    🟩 Low Risk – Disease Unlikely
+                {% endif %}
+            </h2>
+            <div class="prob">{{ probability }}%</div>
+            <p style="font-size:1.1em; margin:0;">
+                Probability of having lungcancer: <strong>{{ probability }}%</strong><br>
+                Probability of NOT having: <strong>{{ no_disease_prob }}%</strong>
+            </p>
         </div>
-        {% endif %}
-    </div>
+    {% endif %}
 </body>
 </html>

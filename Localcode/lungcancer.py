@@ -73,26 +73,24 @@ print(f"Testing Accuracy  : {test_acc * 100:.2f}%")
 # ===============================
 # 9. Predictive System (User Input)
 # ===============================
-print("\nEnter Patient Details (0 = NO, 1 = YES unless stated, M=1, F=0):")
-
 def num_input(msg):
     return float(input(msg))
 
 gender = num_input("Gender (M=1, F=0): ")
-age = num_input("Age: ")
-smoking = num_input("Smoking: ")
-yellow_fingers = num_input("Yellow Fingers: ")
-anxiety = num_input("Anxiety: ")
-peer_pressure = num_input("Peer Pressure: ")
-chronic_disease = num_input("Chronic Disease: ")
-fatigue = num_input("Fatigue: ")
-allergy = num_input("Allergy: ")
-wheezing = num_input("Wheezing: ")
-alcohol = num_input("Alcohol Consuming: ")
-coughing = num_input("Coughing: ")
-shortness_breath = num_input("Shortness of Breath: ")
-swallowing = num_input("Swallowing Difficulty: ")
-chest_pain = num_input("Chest Pain: ")
+age = num_input("Age:")
+smoking = num_input("Smoking(Yes=1 , No=0: ")
+yellow_fingers = num_input("Yellow Fingers(Yes=1 , No=0: ")
+anxiety = num_input("Anxiety(Yes=1 , No=0: ")
+peer_pressure = num_input("Peer Pressure(Yes=1 , No=0: ")
+chronic_disease = num_input("Chronic Disease(Yes=1 , No=0: ")
+fatigue = num_input("Fatigue(Yes=1 , No=0: ")
+allergy = num_input("Allergy(Yes=1 , No=0: ")
+wheezing = num_input("Wheezing(Yes=1 , No=0: ")
+alcohol = num_input("Alcohol Consuming(Yes=1 , No=0: ")
+coughing = num_input("Coughing(Yes=1 , No=0: ")
+shortness_breath = num_input("Shortness of Breath(Yes=1 , No=0: ")
+swallowing = num_input("Swallowing Difficulty(Yes=1 , No=0: ")
+chest_pain = num_input("Chest Pain(Yes=1 , No=0: ")
 
 # ===============================
 # 10. Prepare Input & Predict

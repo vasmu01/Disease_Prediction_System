@@ -19,17 +19,23 @@ warnings.filterwarnings('ignore')
 # =========================
 df = pd.read_csv("heart.csv")
 
-# Replace '?' with NaN and convert to numeric
+# Replace '?' with NaN and convert all columns to numeric
 df.replace('?', np.nan, inplace=True)
 for col in df.columns:
     df[col] = pd.to_numeric(df[col], errors='coerce')
+
+# Drop rows with missing values
 df.dropna(inplace=True)
 
 # =========================
-# SEPARATE FEATURES & TARGET
+# FEATURES & TARGET
 # =========================
-X = df.drop('target', axis=1)
-y = df['target']
+FEATURES = ['age','sex','cp','trestbps','chol','fbs','restecg',
+            'thalach','exang','oldpeak','slope','ca','thal']
+TARGET = 'target'
+
+X = df[FEATURES]
+y = df[TARGET]
 
 # =========================
 # TRAIN/TEST SPLIT
@@ -62,15 +68,14 @@ print(f"✅ Testing Accuracy : {test_acc*100:.2f}%")
 # =========================
 with open("heart_model.pkl", "wb") as f:
     pickle.dump(model, f)
+
 # =========================
 # USER INPUT & PREDICTION
 # =========================
 print("\n❤️ Heart Disease Prediction System")
-features = ['age','sex','cp','trestbps','chol','fbs','restecg',
-            'thalach','exang','oldpeak','slope','ca','thal']
 
 user_input = {}
-for f in features:
+for f in FEATURES:
     while True:
         try:
             user_input[f] = float(input(f"{f}: "))
@@ -79,17 +84,14 @@ for f in features:
             print("❌ Enter a valid number")
 
 # Prepare input
-input_array = np.array([list(user_input.values())])
+input_array = np.array([list(user_input[f] for f in FEATURES)])
 
 # Predict
 prediction = model.predict(input_array)[0]
 probability = model.predict_proba(input_array)[0][1] * 100
 
 print(f"\n📊 Heart Disease Probability: {probability:.2f}%")
-if prediction == 1:
-    print("🟥 Result: Person HAS Heart Disease")
-else:
-    print("🟩 Result: Person does NOT have Heart Disease")
+print("🟥 HAS Heart Disease" if prediction == 1 else "🟩 Does NOT have Heart Disease")
 
 # =========================
 # PERSONALIZED SUGGESTIONS

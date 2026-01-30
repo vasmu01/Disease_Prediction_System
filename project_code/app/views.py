@@ -90,303 +90,6 @@ def user_logout(request):
     return redirect('signin')
 
 
-# HEART DISEASE PREDICTION
-
-MODEL_PATH = os.path.join(settings.BASE_DIR, "app", "models", "heart_model.pkl")
-
-# Load the model safely
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model not found at {MODEL_PATH}")
-
-with open(MODEL_PATH, "rb") as f:
-    model = pickle.load(f)
-# List of features
-FEATURES = ['age','sex','cp','trestbps','chol','fbs','restecg',
-            'thalach','exang','oldpeak','slope','ca','thal']
-
-# Realistic ranges for input validation
-RANGES = {
-    'age': (20, 90),
-    'sex': (0, 2),  # 0: female, 1: male, 2: custom
-    'cp': (0, 3),
-    'trestbps': (90, 200),
-    'chol': (100, 400),
-    'fbs': (0, 1),
-    'restecg': (0, 2),
-    'thalach': (70, 210),
-    'exang': (0, 1),
-    'oldpeak': (0, 6),
-    'slope': (0, 2),
-    'ca': (0, 4),
-    'thal': (0, 3)
-}
-
-def heart_prediction(request):
-    context = {}
-    if request.method == "POST":
-        # Get user input
-        user_input = {}
-        errors = []
-
-        for f in FEATURES:
-            value = request.POST.get(f)
-            if value is None or value.strip() == "":
-                errors.append(f"{f} is required.")
-                continue
-            try:
-                val = float(value)
-            except ValueError:
-                errors.append(f"{f} must be a number.")
-                continue
-
-            # Validate realistic range
-            min_val, max_val = RANGES[f]
-            if val < min_val or val > max_val:
-                errors.append(f"{f} must be between {min_val} and {max_val}.")
-                continue
-
-            user_input[f] = val
-
-        if errors:
-            context['errors'] = errors
-        else:
-            # Prepare input for prediction
-            input_array = np.array([list(user_input.values())])
-            prediction = model.predict(input_array)[0]
-            probability = model.predict_proba(input_array)[0][1] * 100
-
-            # Personalized suggestions
-            age = user_input['age']
-            sex = user_input['sex']
-            trestbps = user_input['trestbps']
-            chol = user_input['chol']
-            fbs = user_input['fbs']
-            thalach = user_input['thalach']
-            exang = user_input['exang']
-            oldpeak = user_input['oldpeak']
-
-            suggestions = []
-
-            if age > 60:
-                suggestions.append("👴 Age > 60: Regular heart check-ups recommended.")
-            elif age > 45:
-                suggestions.append("🧑 Age 45–60: 150 min/week moderate exercise recommended.")
-
-            if sex == 1:
-                suggestions.append("♂️ Male: Focus on cholesterol control.")
-            else:
-                suggestions.append("♀️ Female: Maintain healthy heart habits.")
-
-            if trestbps > 140:
-                suggestions.append("🩸 High BP: Reduce salt intake and manage stress.")
-            if chol > 200:
-                suggestions.append("🍳 High cholesterol: Eat fiber-rich foods, avoid saturated fats.")
-            if fbs == 1:
-                suggestions.append("🍬 High blood sugar: Control carbs, check diabetes regularly.")
-            if thalach < 140:
-                suggestions.append("❤️ Low max heart rate: Increase aerobic exercise.")
-            if exang == 1:
-                suggestions.append("🚭 Exercise-induced angina: Avoid heavy exertion and smoking.")
-            if oldpeak > 1:
-                suggestions.append("📈 High ST depression: Consult doctor immediately.")
-
-            if probability > 50:
-                suggestions.append("⚠️ HIGH RISK: Consult cardiologist urgently.")
-            else:
-                suggestions.append("✅ LOW RISK: Maintain healthy lifestyle.")
-
-            context['prediction'] = prediction
-            context['probability'] = round(probability, 2)
-            context['suggestions'] = suggestions
-            context['user_input'] = user_input
-
-    return render(request, "heartprediction.html", context)
-
-
-
-
-
-# LUNGCANCER PREDICTION
-MODEL_PATH = os.path.join(settings.BASE_DIR, "app", "models", "lung_model.pkl")
-
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model not found at {MODEL_PATH}")
-
-with open(MODEL_PATH, "rb") as f:
-    model = pickle.load(f)
-
-# Features
-FEATURES = [
-    'gender','age','smoking','yellow_fingers','anxiety','peer_pressure',
-    'chronic_disease','fatigue','allergy','wheezing','alcohol','coughing',
-    'shortness_breath','swallowing','chest_pain'
-]
-
-# Realistic ranges for validation
-RANGES = {
-    'gender': (0,1),
-    'age': (1,120),
-    'smoking': (0,1),
-    'yellow_fingers': (0,1),
-    'anxiety': (0,1),
-    'peer_pressure': (0,1),
-    'chronic_disease': (0,1),
-    'fatigue': (0,1),
-    'allergy': (0,1),
-    'wheezing': (0,1),
-    'alcohol': (0,1),
-    'coughing': (0,1),
-    'shortness_breath': (0,1),
-    'swallowing': (0,1),
-    'chest_pain': (0,1)
-}
-
-def lungcancer_prediction(request):
-    context = {}
-    if request.method == "POST":
-        user_input = {}
-        errors = []
-
-        for f in FEATURES:
-            value = request.POST.get(f)
-            if value is None or value.strip() == "":
-                errors.append(f"{f.replace('_',' ').title()} is required.")
-                continue
-            try:
-                val = float(value)
-            except ValueError:
-                errors.append(f"{f.replace('_',' ').title()} must be a number.")
-                continue
-
-            min_val, max_val = RANGES[f]
-            if val < min_val or val > max_val:
-                errors.append(f"{f.replace('_',' ').title()} must be between {min_val} and {max_val}.")
-                continue
-
-            user_input[f] = val
-
-        if errors:
-            context['errors'] = errors
-        else:
-            input_array = np.array([list(user_input.values())])
-            prediction = model.predict(input_array)[0]
-            probability = model.predict_proba(input_array)[0][1] * 100
-
-            # Personalized suggestions
-            age = user_input['age']
-            gender = user_input['gender']
-            fatigue = user_input['fatigue']
-            chronic = user_input['chronic_disease']
-            chest_pain = user_input['chest_pain']
-
-            suggestions = []
-            if age > 60:
-                suggestions.append("👴 Age > 60: Regular checkups recommended.")
-            if gender == 1:
-                suggestions.append("♂️ Male: Monitor lifestyle risk factors.")
-            else:
-                suggestions.append("♀️ Female: Maintain healthy habits.")
-
-            if fatigue == 1:
-                suggestions.append("💤 Fatigue: Ensure proper rest and check underlying conditions.")
-            if chronic == 1:
-                suggestions.append("🩺 Chronic Disease: Follow prescribed treatments.")
-            if chest_pain == 1:
-                suggestions.append("❤️ Chest Pain: Immediate doctor consultation advised.")
-
-            if probability > 50:
-                suggestions.append("⚠️ HIGH RISK: Consult doctor urgently.")
-            else:
-                suggestions.append("✅ LOW RISK: Maintain healthy lifestyle.")
-
-            context['prediction'] = prediction
-            context['probability'] = round(probability, 2)
-            context['suggestions'] = suggestions
-            context['user_input'] = user_input
-
-    return render(request, "lungcancerprediction.html", context)
-
-
-
-
-# BREAST CANCER PREDICTION
-
-MODEL_PATH = os.path.join(settings.BASE_DIR, "app", "models", "breast_model.pkl")
-
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model not found at {MODEL_PATH}")
-
-with open(MODEL_PATH, "rb") as f:
-    model = pickle.load(f)
-
-# Features
-FEATURES = [
-    'radius_mean','texture_mean','perimeter_mean','area_mean','smoothness_mean',
-    'compactness_mean','concavity_mean','concave_points_mean','symmetry_mean','fractal_dimension_mean',
-    'radius_se','texture_se','perimeter_se','area_se','smoothness_se',
-    'compactness_se','concavity_se','concave_points_se','symmetry_se','fractal_dimension_se',
-    'radius_worst','texture_worst','perimeter_worst','area_worst','smoothness_worst',
-    'compactness_worst','concavity_worst','concave_points_worst','symmetry_worst','fractal_dimension_worst'
-]
-
-# Realistic ranges (example; you can tune based on dataset stats)
-RANGES = {f: (0, 50) for f in FEATURES}  # Most features are continuous numeric values
-
-def breast_prediction(request):
-    context = {}
-    if request.method == "POST":
-        user_input = {}
-        errors = []
-
-        for f in FEATURES:
-            value = request.POST.get(f)
-            if value is None or value.strip() == "":
-                errors.append(f"{f.replace('_',' ').title()} is required.")
-                continue
-            try:
-                val = float(value)
-            except ValueError:
-                errors.append(f"{f.replace('_',' ').title()} must be a number.")
-                continue
-
-            min_val, max_val = RANGES[f]
-            if val < min_val or val > max_val:
-                errors.append(f"{f.replace('_',' ').title()} must be between {min_val} and {max_val}.")
-                continue
-
-            user_input[f] = val
-
-        if errors:
-            context['errors'] = errors
-        else:
-            input_array = np.array([list(user_input.values())])
-            prediction = model.predict(input_array)[0]
-            probability = model.predict_proba(input_array)[0][1] * 100
-
-            # Suggestions
-            radius_mean = user_input['radius_mean']
-            area_mean = user_input['area_mean']
-
-            suggestions = []
-            if radius_mean > 15:
-                suggestions.append("⚠️ Large tumor size suspected: Consult oncologist immediately.")
-            if area_mean > 500:
-                suggestions.append("📏 Large tumor area detected: Early intervention advised.")
-
-            if probability > 50:
-                suggestions.append("⚠️ HIGH RISK: Immediate medical consultation recommended.")
-            else:
-                suggestions.append("✅ LOW RISK: Continue regular screening and healthy lifestyle.")
-
-            context['prediction'] = prediction
-            context['probability'] = round(probability, 2)
-            context['suggestions'] = suggestions
-            context['user_input'] = user_input
-
-    return render(request, "breastcancerprediction.html", context)
-
-
-
 # DIABETIES PREDICTION
 MODEL_PATH = os.path.join(settings.BASE_DIR, "app", "models", "diabetes_model.pkl")
 
@@ -496,3 +199,127 @@ def diabeties_prediction(request):
             })
 
     return render(request, "diabetiesprediction.html", context)
+
+
+# Load the trained model (only once when server starts)
+
+model = os.path.join(settings.BASE_DIR, "app", "models", "lung_model.pkl")
+
+if not os.path.exists(model):
+    raise FileNotFoundError(f"Diabetes model not found at {model}")
+
+with open(model, "rb") as f:
+    model = pickle.load(f)
+    
+def lungcancer_prediction(request):
+    if request.method == 'POST':
+        try:
+            # Collect all 15 inputs from form
+            gender = int(request.POST.get('gender'))
+            age = float(request.POST.get('age'))
+            smoking = int(request.POST.get('smoking'))
+            yellow_fingers = int(request.POST.get('yellow_fingers'))
+            anxiety = int(request.POST.get('anxiety'))
+            peer_pressure = int(request.POST.get('peer_pressure'))
+            chronic_disease = int(request.POST.get('chronic_disease'))
+            fatigue = int(request.POST.get('fatigue'))
+            allergy = int(request.POST.get('allergy'))
+            wheezing = int(request.POST.get('wheezing'))
+            alcohol = int(request.POST.get('alcohol'))
+            coughing = int(request.POST.get('coughing'))
+            shortness_breath = int(request.POST.get('shortness_breath'))
+            swallowing = int(request.POST.get('swallowing'))
+            chest_pain = int(request.POST.get('chest_pain'))
+
+            # Prepare input for model
+            input_data = [
+                gender, age, smoking, yellow_fingers, anxiety, peer_pressure,
+                chronic_disease, fatigue, allergy, wheezing,
+                alcohol, coughing, shortness_breath,
+                swallowing, chest_pain
+            ]
+
+            input_array = np.array([input_data])
+
+            # Make prediction
+            prediction = model.predict(input_array)[0]
+            probability = model.predict_proba(input_array)[0][1] * 100
+
+            # Prepare result
+            context = {
+                'probability': round(probability, 2),
+                'no_disease_prob': round(100 - probability, 2),
+                'has_disease': prediction == 1,
+            }
+
+            return render(request, 'lungcancerprediction.html', context)
+
+        except (ValueError, TypeError):
+            # If any input is invalid
+            return render(request, 'lungcancerprediction.html', {'error': 'कृपया सबै जानकारी सही तरिकाले भर्नुहोस्।'})
+
+    # GET request → show empty form
+    return render(request, 'lungcancerprediction.html')
+
+
+
+
+# =========================
+# Load Heart Model
+# =========================
+model_path = os.path.join(settings.BASE_DIR, "app", 'models', 'heart_model.pkl')
+heart_model = None
+if os.path.exists(model_path):
+    with open(model_path, 'rb') as f:
+        heart_model = pickle.load(f)
+else:
+    print(f"Heart model not found at {model_path}")
+
+# =========================
+# Heart Prediction View
+# =========================
+def heart_prediction(request):
+    context = {
+        'probability': None,
+        'no_disease_prob': None,
+        'has_disease': None,
+        'error': None
+    }
+
+    if request.method == 'POST':
+        try:
+            # Collect all 13 features from form
+            features = [
+                float(request.POST.get('age', 0)),
+                int(request.POST.get('sex', 0)),
+                int(request.POST.get('cp', 0)),
+                float(request.POST.get('trestbps', 0)),
+                float(request.POST.get('chol', 0)),
+                int(request.POST.get('fbs', 0)),
+                int(request.POST.get('restecg', 0)),
+                float(request.POST.get('thalach', 0)),
+                int(request.POST.get('exang', 0)),
+                float(request.POST.get('oldpeak', 0)),
+                int(request.POST.get('slope', 0)),
+                float(request.POST.get('ca', 0)),
+                int(request.POST.get('thal', 0)),
+            ]
+
+            input_array = np.array([features])
+
+            if heart_model is None:
+                context['error'] = "Heart model file not loaded."
+            else:
+                prediction = heart_model.predict(input_array)[0]
+                probability = heart_model.predict_proba(input_array)[0][1] * 100
+
+                context.update({
+                    'probability': round(probability, 2),
+                    'no_disease_prob': round(100 - probability, 2),
+                    'has_disease': prediction == 1,
+                })
+
+        except (ValueError, TypeError):
+            context['error'] = "कृपया सबै फिल्डहरू सही तरिकाले भर्नुहोस् (संख्या मात्र)।"
+
+    return render(request, 'heartprediction.html', context)
