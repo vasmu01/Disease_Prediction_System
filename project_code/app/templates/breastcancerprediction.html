@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breast Cancer Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #111;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        form div {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #111;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        .errors {
+            background-color: #ffdddd;
+            padding: 10px;
+            border-left: 5px solid red;
+            margin-bottom: 15px;
+        }
+        .result {
+            background-color: #ddffdd;
+            padding: 15px;
+            border-left: 5px solid green;
+            margin-top: 15px;
+        }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Breast Cancer Prediction</h1>
+
+        {% if errors %}
+        <div class="errors">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Mean features -->
+            <div><label for="radius_mean">Radius Mean</label>
+                <input type="number" step="0.01" name="radius_mean" id="radius_mean" value="{{ user_input.radius_mean|default:'' }}"></div>
+            <div><label for="texture_mean">Texture Mean</label>
+                <input type="number" step="0.01" name="texture_mean" id="texture_mean" value="{{ user_input.texture_mean|default:'' }}"></div>
+            <div><label for="perimeter_mean">Perimeter Mean</label>
+                <input type="number" step="0.01" name="perimeter_mean" id="perimeter_mean" value="{{ user_input.perimeter_mean|default:'' }}"></div>
+            <div><label for="area_mean">Area Mean</label>
+                <input type="number" step="0.01" name="area_mean" id="area_mean" value="{{ user_input.area_mean|default:'' }}"></div>
+            <div><label for="smoothness_mean">Smoothness Mean</label>
+                <input type="number" step="0.01" name="smoothness_mean" id="smoothness_mean" value="{{ user_input.smoothness_mean|default:'' }}"></div>
+            <div><label for="compactness_mean">Compactness Mean</label>
+                <input type="number" step="0.01" name="compactness_mean" id="compactness_mean" value="{{ user_input.compactness_mean|default:'' }}"></div>
+            <div><label for="concavity_mean">Concavity Mean</label>
+                <input type="number" step="0.01" name="concavity_mean" id="concavity_mean" value="{{ user_input.concavity_mean|default:'' }}"></div>
+<div>
+    <label for="concave_points_mean">Concave Points Mean</label>
+    <input type="number" step="0.01" name="concave_points_mean" id="concave_points_mean" value="{{ user_input.concave_points_mean|default:'' }}">
+</div>            <div><label for="symmetry_mean">Symmetry Mean</label>
+                <input type="number" step="0.01" name="symmetry_mean" id="symmetry_mean" value="{{ user_input.symmetry_mean|default:'' }}"></div>
+            <div><label for="fractal_dimension_mean">Fractal Dimension Mean</label>
+                <input type="number" step="0.01" name="fractal_dimension_mean" id="fractal_dimension_mean" value="{{ user_input.fractal_dimension_mean|default:'' }}"></div>
+
+            <!-- SE features -->
+            <div><label for="radius_se">Radius SE</label>
+                <input type="number" step="0.01" name="radius_se" id="radius_se" value="{{ user_input.radius_se|default:'' }}"></div>
+            <div><label for="texture_se">Texture SE</label>
+                <input type="number" step="0.01" name="texture_se" id="texture_se" value="{{ user_input.texture_se|default:'' }}"></div>
+            <div><label for="perimeter_se">Perimeter SE</label>
+                <input type="number" step="0.01" name="perimeter_se" id="perimeter_se" value="{{ user_input.perimeter_se|default:'' }}"></div>
+            <div><label for="area_se">Area SE</label>
+                <input type="number" step="0.01" name="area_se" id="area_se" value="{{ user_input.area_se|default:'' }}"></div>
+            <div><label for="smoothness_se">Smoothness SE</label>
+                <input type="number" step="0.01" name="smoothness_se" id="smoothness_se" value="{{ user_input.smoothness_se|default:'' }}"></div>
+            <div><label for="compactness_se">Compactness SE</label>
+                <input type="number" step="0.01" name="compactness_se" id="compactness_se" value="{{ user_input.compactness_se|default:'' }}"></div>
+            <div><label for="concavity_se">Concavity SE</label>
+                <input type="number" step="0.01" name="concavity_se" id="concavity_se" value="{{ user_input.concavity_se|default:'' }}"></div>
+<div>
+    <label for="concave_points_se">Concave Points SE</label>
+    <input type="number" step="0.01" name="concave_points_se" id="concave_points_se" value="{{ user_input.concave_points_se|default:'' }}">
+</div>
+            <div><label for="symmetry_se">Symmetry SE</label>
+                <input type="number" step="0.01" name="symmetry_se" id="symmetry_se" value="{{ user_input.symmetry_se|default:'' }}"></div>
+            <div><label for="fractal_dimension_se">Fractal Dimension SE</label>
+                <input type="number" step="0.01" name="fractal_dimension_se" id="fractal_dimension_se" value="{{ user_input.fractal_dimension_se|default:'' }}"></div>
+
+            <!-- Worst features -->
+            <div><label for="radius_worst">Radius Worst</label>
+                <input type="number" step="0.01" name="radius_worst" id="radius_worst" value="{{ user_input.radius_worst|default:'' }}"></div>
+            <div><label for="texture_worst">Texture Worst</label>
+                <input type="number" step="0.01" name="texture_worst" id="texture_worst" value="{{ user_input.texture_worst|default:'' }}"></div>
+            <div><label for="perimeter_worst">Perimeter Worst</label>
+                <input type="number" step="0.01" name="perimeter_worst" id="perimeter_worst" value="{{ user_input.perimeter_worst|default:'' }}"></div>
+            <div><label for="area_worst">Area Worst</label>
+                <input type="number" step="0.01" name="area_worst" id="area_worst" value="{{ user_input.area_worst|default:'' }}"></div>
+            <div><label for="smoothness_worst">Smoothness Worst</label>
+                <input type="number" step="0.01" name="smoothness_worst" id="smoothness_worst" value="{{ user_input.smoothness_worst|default:'' }}"></div>
+            <div><label for="compactness_worst">Compactness Worst</label>
+                <input type="number" step="0.01" name="compactness_worst" id="compactness_worst" value="{{ user_input.compactness_worst|default:'' }}"></div>
+            <div><label for="concavity_worst">Concavity Worst</label>
+                <input type="number" step="0.01" name="concavity_worst" id="concavity_worst" value="{{ user_input.concavity_worst|default:'' }}"></div>
+            <div><label for="concave_points_worst">Concave Points Worst</label>
+<input type="number" step="0.01" name="concave_points_worst" id="concave_points_worst" value="{{ user_input.concave_points_worst|default:'' }}">
+            <div><label for="symmetry_worst">Symmetry Worst</label>
+                <input type="number" step="0.01" name="symmetry_worst" id="symmetry_worst" value="{{ user_input.symmetry_worst|default:'' }}"></div>
+            <div><label for="fractal_dimension_worst">Fractal Dimension Worst</label>
+                <input type="number" step="0.01" name="fractal_dimension_worst" id="fractal_dimension_worst" value="{{ user_input.fractal_dimension_worst|default:'' }}"></div>
+
+            <button type="submit">Predict</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result">
+            <h2>Prediction Result</h2>
+            <p><strong>Prediction:</strong> {{ prediction }}</p>
+            <p><strong>Probability:</strong> {{ probability }}%</p>
+            <strong>Suggestions:</strong>
+            <ul>
+                {% for s in suggestions %}
+                    <li>{{ s }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heart Disease Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #111;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        label {
+            font-weight: bold;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #111;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #333; }
+        .error { color: red; margin-bottom: 10px; }
+        .result { background: #eee; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        .suggestion { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>❤️ Heart Disease Prediction System</h2>
+
+        {% if errors %}
+            <div class="error">
+                <ul>
+                {% for err in errors %}
+                    <li>{{ err }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <label for="age">Age:</label>
+            <input type="number" name="age" id="age" min="20" max="90" value="{{ user_input.age|default:'' }}">
+
+            <label for="sex">Sex:</label>
+            <select name="sex" id="sex">
+                <option value="0" {% if user_input.sex == 0 %}selected{% endif %}>Female</option>
+                <option value="1" {% if user_input.sex == 1 %}selected{% endif %}>Male</option>
+                <option value="2" {% if user_input.sex == 2 %}selected{% endif %}>Custom</option>
+            </select>
+
+            <label for="cp">Chest Pain Type (cp: 0-3):</label>
+            <input type="number" name="cp" id="cp" min="0" max="3" value="{{ user_input.cp|default:'' }}">
+
+            <label for="trestbps">Resting Blood Pressure (90-200):</label>
+            <input type="number" name="trestbps" id="trestbps" min="90" max="200" value="{{ user_input.trestbps|default:'' }}">
+
+            <label for="chol">Cholesterol (100-400):</label>
+            <input type="number" name="chol" id="chol" min="100" max="400" value="{{ user_input.chol|default:'' }}">
+
+            <label for="fbs">Fasting Blood Sugar (0 = <=120, 1 = >120):</label>
+            <select name="fbs" id="fbs">
+                <option value="0" {% if user_input.fbs == 0 %}selected{% endif %}>0</option>
+                <option value="1" {% if user_input.fbs == 1 %}selected{% endif %}>1</option>
+            </select>
+
+            <label for="restecg">Resting ECG (0-2):</label>
+            <input type="number" name="restecg" id="restecg" min="0" max="2" value="{{ user_input.restecg|default:'' }}">
+
+            <label for="thalach">Max Heart Rate Achieved (70-210):</label>
+            <input type="number" name="thalach" id="thalach" min="70" max="210" value="{{ user_input.thalach|default:'' }}">
+
+            <label for="exang">Exercise Induced Angina (0 = No, 1 = Yes):</label>
+            <select name="exang" id="exang">
+                <option value="0" {% if user_input.exang == 0 %}selected{% endif %}>0</option>
+                <option value="1" {% if user_input.exang == 1 %}selected{% endif %}>1</option>
+            </select>
+
+            <label for="oldpeak">ST Depression (0-6):</label>
+            <input type="number" step="0.1" name="oldpeak" id="oldpeak" min="0" max="3" value="{{ user_input.oldpeak|default:'' }}">
+
+            <label for="slope">Slope of ST Segment (0-2):</label>
+            <input type="number" name="slope" id="slope" min="0" max="2" value="{{ user_input.slope|default:'' }}">
+
+            <label for="ca">Number of Major Vessels (0-4):</label>
+            <input type="number" name="ca" id="ca" min="0" max="4" value="{{ user_input.ca|default:'' }}">
+
+            <label for="thal">Thal (0-3):</label>
+            <input type="number" name="thal" id="thal" min="0" max="3" value="{{ user_input.thal|default:'' }}">
+
+            <button type="submit" class="btn">Predict</button>
+        </form>
+
+        {% if prediction is not None %}
+        <div class="result">
+            <h3>📊 Prediction Result</h3>
+            <p><strong>Heart Disease Probability:</strong> {{ probability }}%</p>
+            {% if prediction == 1 %}
+                <p style="color:red;">🟥 Result: Person HAS Heart Disease</p>
+            {% else %}
+                <p style="color:green;">🟩 Result: Person does NOT have Heart Disease</p>
+            {% endif %}
+
+            <h4>💡 Suggestions:</h4>
+            <ul>
+                {% for s in suggestions %}
+                    <li class="suggestion">{{ s }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

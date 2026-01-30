@@ -31,6 +31,14 @@
       border: 1px solid rgba(255, 255, 255, 0.16);
       font-size: 13px;
       margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards;
+    }
+    
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
     }
     
     .hero h1 {
@@ -38,6 +46,12 @@
       line-height: 1.05;
       letter-spacing: 0.02em;
       margin-bottom: 16px;
+      min-height: 2.2em;
+    }
+    
+    /* Typing text - no cursor, just smooth appearance */
+    .typing-text {
+      display: inline-block;
     }
     
     .hero p {
@@ -45,12 +59,29 @@
       line-height: 1.6;
       color: rgba(255, 255, 255, 0.7);
       margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeInUp 1.2s ease forwards;
+      animation-delay: 6s;
     }
     
     .cta-row {
       display: flex;
       justify-content: center;
       gap: 16px;
+      opacity: 0;
+      animation: fadeInUp 1.2s ease forwards;
+      animation-delay: 7s;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     .btn {
@@ -498,13 +529,16 @@
       }
     }
   </style>
+
   <!-- HERO -->
   <section class="hero" id="hero">
-    <div class="hero-inner" data-aos="zoom-in" data-aos-delay="200" data-aos-duration="1200">
-      <div class="badge" data-aos="fade-up" data-aos-delay="400">AI-Powered Health Prediction</div>
-      <h1 data-aos="fade-up" data-aos-delay="600">Predicting Health<br />Empowering Lives</h1>
-      <p data-aos="fade-up" data-aos-delay="800">Use an intelligent web-based system that analyzes health data and symptoms to predict the risk of diseases using machine learning.</p>
-      <div class="cta-row" data-aos="fade-up" data-aos-delay="1000">
+    <div class="hero-inner">
+      <div class="badge">AI-Powered Health Prediction</div>
+      <h1>
+        <span class="typing-text" id="typingText"></span>
+      </h1>
+      <p>Use an intelligent web-based system that analyzes health data and symptoms to predict the risk of diseases using machine learning.</p>
+      <div class="cta-row">
 {% if user.is_authenticated %}
     <!-- User logged in -->
 {% else %}
@@ -577,4 +611,32 @@
       </div>
     </div>
   </section>
+
+  <script>
+    // Clean smooth typing animation - no cursor visible
+    const textToType = "Predicting Health\nEmpowering Lives";
+    const typingElement = document.getElementById('typingText');
+    let charIndex = 0;
+    
+    function typeText() {
+      if (charIndex < textToType.length) {
+        const char = textToType[charIndex];
+        
+        if (char === '\n') {
+          typingElement.innerHTML += '<br>';
+        } else {
+          typingElement.innerHTML += char;
+        }
+        
+        charIndex++;
+        
+        // Slower, smooth typing speed (100-150ms per character)
+        const typingSpeed = Math.random() * 50 + 100;
+        setTimeout(typeText, typingSpeed);
+      }
+    }
+    
+    // Start typing animation after badge appears
+    setTimeout(typeText, 1200);
+  </script>
 {% endblock %}

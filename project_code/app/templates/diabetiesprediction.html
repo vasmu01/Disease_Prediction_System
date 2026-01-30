@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #111;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        form div {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #111;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        .errors {
+            background-color: #ffdddd;
+            padding: 10px;
+            border-left: 5px solid red;
+            margin-bottom: 15px;
+        }
+        .result {
+            background-color: #ddffdd;
+            padding: 15px;
+            border-left: 5px solid green;
+            margin-top: 15px;
+        }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diabetes Prediction</h1>
+
+        {% if errors %}
+        <div class="errors">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div>
+                <label for="pregnancies">Pregnancies</label>
+                <input type="number" step="1" name="pregnancies" id="pregnancies" value="{{ user_input.pregnancies|default:'' }}">
+            </div>
+            <div>
+                <label for="glucose">Glucose Level</label>
+                <input type="number" step="0.01" name="glucose" id="glucose" value="{{ user_input.glucose|default:'' }}">
+            </div>
+            <div>
+                <label for="bp">Blood Pressure</label>
+                <input type="number" step="0.01" name="bp" id="bp" value="{{ user_input.bp|default:'' }}">
+            </div>
+            <div>
+                <label for="skin">Skin Thickness</label>
+                <input type="number" step="0.01" name="skin" id="skin" value="{{ user_input.skin|default:'' }}">
+            </div>
+            <div>
+                <label for="insulin">Insulin</label>
+                <input type="number" step="0.01" name="insulin" id="insulin" value="{{ user_input.insulin|default:'' }}">
+            </div>
+            <div>
+                <label for="bmi">BMI</label>
+                <input type="number" step="0.01" name="bmi" id="bmi" value="{{ user_input.bmi|default:'' }}">
+            </div>
+            <div>
+                <label for="dpf">Diabetes Pedigree Function</label>
+                <input type="number" step="0.001" name="dpf" id="dpf" value="{{ user_input.dpf|default:'' }}">
+            </div>
+            <div>
+                <label for="age">Age</label>
+                <input type="number" step="1" name="age" id="age" value="{{ user_input.age|default:'' }}">
+            </div>
+
+            <button type="submit">Predict</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result">
+            <h2>Prediction Result</h2>
+            <p><strong>Prediction:</strong> {{ prediction }}</p>
+            <p><strong>Probability:</strong> {{ probability }}%</p>
+            <h3>Input Values:</h3>
+            <ul>
+                <li>Pregnancies: {{ user_input.pregnancies }}</li>
+                <li>Glucose Level: {{ user_input.glucose }}</li>
+                <li>Blood Pressure: {{ user_input.bp }}</li>
+                <li>Skin Thickness: {{ user_input.skin }}</li>
+                <li>Insulin: {{ user_input.insulin }}</li>
+                <li>BMI: {{ user_input.bmi }}</li>
+                <li>Diabetes Pedigree Function: {{ user_input.dpf }}</li>
+                <li>Age: {{ user_input.age }}</li>
+            </ul>
+
+            <h3>Personalized Suggestions:</h3>
+            <ul>
+                {% for s in suggestions %}
+                    <li>{{ s }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
