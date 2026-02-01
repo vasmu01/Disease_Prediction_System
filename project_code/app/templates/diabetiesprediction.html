@@ -1,261 +1,1285 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes Prediction</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Diabetes Prediction | VitaPredica{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+{% block nav_links %}
+<nav class="nav-links">
+  <a href="{% url 'home' %}">Home</a>
+  <a href="#guide">Parameter Guide</a>
+  <div class="nav-cta">
+    {% if user.is_authenticated %}
+      <span>Hi, {{ user.username }}</span>
+      <a href="{% url 'logout' %}" class="ghost-link">/ Logout</a>
+    {% else %}
+      <a href="{% url 'signup' %}" class="ghost-link">Sign in / Log in</a>
+    {% endif %}
+  </div>
+</nav>
+{% endblock %}
 
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
+{% block content %}
+<style>
+  /* Diabetes Prediction Page Styles */
+  .prediction-hero {
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 6vw 60px;
+    background: linear-gradient(135deg, #000 0%, #0a0a0a 50%, #000 100%);
+    position: relative;
+    overflow: hidden;
+  }
 
-        h1 {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-            font-size: 2.2em;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
+  .prediction-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%);
+    pointer-events: none;
+  }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+  .prediction-hero-content {
+    text-align: center;
+    max-width: 700px;
+    z-index: 1;
+  }
 
-        label {
-            display: block;
-            color: white;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+  .prediction-hero .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 13px;
+    margin-bottom: 24px;
+    color: rgba(255,255,255,0.8);
+  }
 
-        input[type="number"] {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.9);
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        }
+  .prediction-hero h1 {
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-        input[type="number"]:focus {
-            outline: none;
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
+  .prediction-hero p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+  }
 
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+  /* Main Content */
+  .prediction-content {
+    padding: 60px 6vw 80px;
+    background: #f5f5f5;
+  }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(255,107,107,0.4);
-        }
+  .prediction-wrapper {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
 
-        .error-list {
-            background: rgba(255,107,107,0.2);
-            border: 1px solid rgba(255,107,107,0.4);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #ff6b6b;
-        }
+  .prediction-container {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 0;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.08);
+  }
 
-        .error-list ul {
-            margin: 0;
-            padding-left: 20px;
-        }
+  @media (max-width: 1024px) {
+    .prediction-container {
+      grid-template-columns: 1fr;
+    }
+  }
 
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-        }
+  /* Left Side - Guide (Dark) */
+  .guide-section {
+    padding: 40px;
+    background: #0a0a0a;
+    color: #fff;
+  }
 
-        .has-diabetes {
-            background: rgba(255,107,107,0.3);
-            color: #ff6b6b;
-            border: 2px solid rgba(255,107,107,0.5);
-        }
+  @media (max-width: 1024px) {
+    .guide-section {
+      padding: 24px;
+    }
+  }
 
-        .no-diabetes {
-            background: rgba(52,152,219,0.3);
-            color: #3498db;
-            border: 2px solid rgba(52,152,219,0.5);
-        }
+  .guide-section .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+  }
 
-        .probability {
-            font-size: 24px;
-            margin: 10px 0;
-        }
+  .guide-section h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-left: 16px;
+    border-left: 3px solid #fff;
+  }
 
-        .suggestions {
-            margin-top: 20px;
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            color: white;
-        }
+  .guide-section > p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
 
-        .input-display {
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
+  .guide-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.9);
+  }
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🏥 Diabetes Prediction</h1>
+  .guide-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
 
-        {% if errors %}
-        <div class="error-list">
-            <ul>
-                {% for error in errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+  .guide-list::-webkit-scrollbar {
+    width: 4px;
+  }
 
-        {% if error %}
-        <div class="error-list">
-            <p>{{ error }}</p>
-        </div>
-        {% endif %}
+  .guide-list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+  }
 
-        {% if user_input %}
-        <div class="input-display">
-            <h3>📊 Your Input:</h3>
-            <ul style="color: white; list-style: none; padding: 0;">
-                <li>Pregnancies: {{ user_input.pregnancies }}</li>
-                <li>Glucose: {{ user_input.glucose }}</li>
-                <li>Blood Pressure: {{ user_input.bp }}</li>
-                <li>Skin Thickness: {{ user_input.skin }}</li>
-                <li>Insulin: {{ user_input.insulin }}</li>
-                <li>BMI: {{ user_input.bmi }}</li>
-                <li>Diabetes Pedigree: {{ user_input.dpf }}</li>
-                <li>Age: {{ user_input.age }}</li>
-            </ul>
-        </div>
-        {% endif %}
+  .guide-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+  }
 
-        <form method="POST">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label>👩 Pregnancies</label>
-                <input type="number" name="pregnancies" value="{{ user_input.pregnancies|default:'' }}" min="0" step="1">
-            </div>
+  .guide-category {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.4);
+    margin-top: 12px;
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
 
-            <div class="form-group">
-                <label>🩸 Glucose (mg/dL)</label>
-                <input type="number" name="glucose" value="{{ user_input.glucose|default:'' }}" min="0" step="0.1">
-            </div>
+  .guide-category:first-of-type {
+    margin-top: 0;
+  }
 
-            <div class="form-group">
-                <label>🩺 Blood Pressure (mmHg)</label>
-                <input type="number" name="bp" value="{{ user_input.bp|default:'' }}" min="0" step="0.1">
-            </div>
+  .guide-item {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
 
-            <div class="form-group">
-                <label>📏 Skin Thickness (mm)</label>
-                <input type="number" name="skin" value="{{ user_input.skin|default:'' }}" min="0" step="0.1">
-            </div>
+  .guide-item:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
 
-            <div class="form-group">
-                <label>💉 Insulin (mu U/ml)</label>
-                <input type="number" name="insulin" value="{{ user_input.insulin|default:'' }}" min="0" step="0.1">
-            </div>
+  .guide-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
 
-            <div class="form-group">
-                <label>⚖️ BMI (kg/m²)</label>
-                <input type="number" name="bmi" value="{{ user_input.bmi|default:'' }}" min="0" step="0.1">
-            </div>
+  .guide-item strong {
+    font-size: 13px;
+    color: #fff;
+    display: block;
+    margin-bottom: 4px;
+  }
 
-            <div class="form-group">
-                <label>🧬 Diabetes Pedigree Function</label>
-                <input type="number" name="dpf" value="{{ user_input.dpf|default:'' }}" min="0" step="0.01">
-            </div>
+  .guide-item .short-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+  }
 
-            <div class="form-group">
-                <label>🎂 Age (years)</label>
-                <input type="number" name="age" value="{{ user_input.age|default:'' }}" min="0" step="1">
-            </div>
+  .guide-item .range {
+    background: #fff;
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 
-            <button type="submit" class="btn">🔮 Predict Diabetes</button>
-        </form>
+  .guide-item .range.select {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
 
-        {% if prediction %}
-        <div class="result {% if prediction == 'HAS Diabetes' %}has-diabetes{% else %}no-diabetes{% endif %}">
-            <div class="probability">
-                {{ prediction }} 
-                <span style="font-size: 0.6em;">({{ probability }}% risk)</span>
-            </div>
-        </div>
+  /* Expanded Details */
+  .guide-item .details {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    opacity: 0;
+  }
 
-        {% if suggestions %}
-        <div class="suggestions">
-            <h4>💡 Personalized Health Suggestions:</h4>
-            <ul style="margin: 10px 0; padding-left: 20px;">
-                {% for suggestion in suggestions %}
-                <li>{{ suggestion }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        {% endif %}
+  .guide-item:hover .details {
+    max-height: 350px;
+    opacity: 1;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .guide-item .details p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .guide-item .details .options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .guide-item .details .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .guide-item .details .option-value {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    min-width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .guide-item .details .tip {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #ffc107;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .guide-item .details .tip svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Right Side - Form (White) */
+  .form-section {
+    padding: 40px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    .form-section {
+      padding: 24px;
+    }
+  }
+
+  .form-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #737373;
+    margin-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-row.three-col {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  @media (max-width: 768px) {
+    .form-row,
+    .form-row.three-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #171717;
+  }
+
+  .form-group label .required {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #0a0a0a;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #0a0a0a;
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.08);
+  }
+
+  .form-group input::placeholder {
+    color: #a3a3a3;
+  }
+
+  .form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 44px;
+  }
+
+  .btn-predict {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 10px;
+    border: none;
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-predict:hover {
+    background: #262626;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+
+  .btn-predict:active {
+    transform: scale(0.98);
+  }
+
+  /* Results Section - Full Width Below */
+  .results-section {
+    margin-top: 40px;
+    animation: fadeInUp 0.6s ease;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .results-card {
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.08);
+  }
+
+  /* Results Header */
+  .results-header {
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  @media (max-width: 768px) {
+    .results-header {
+      flex-direction: column;
+      text-align: center;
+      padding: 32px 24px;
+    }
+  }
+
+  .results-success .results-header {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+
+  .results-danger .results-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+
+  .results-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .results-header-left {
+      flex-direction: column;
+    }
+  }
+
+  .results-icon-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .results-icon-large svg {
+    width: 40px;
+    height: 40px;
+    color: #fff;
+  }
+
+  .results-title-area h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .results-title-area p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.9);
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .results-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  @media (max-width: 768px) {
+    .results-header-right {
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  .results-header-right .main-percentage {
+    font-size: 56px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .results-header-right .main-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 4px;
+  }
+
+  /* Results Body */
+  .results-body {
+    padding: 40px 48px;
+  }
+
+  @media (max-width: 768px) {
+    .results-body {
+      padding: 24px;
+    }
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 900px) {
+    .results-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .result-stat-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .result-stat-card:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    transform: translateY(-4px);
+  }
+
+  .result-stat-card .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .result-stat-card .stat-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .result-stat-card.danger .stat-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .result-stat-card.success .stat-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .result-stat-card.neutral .stat-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+
+  .result-stat-card .stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .result-stat-card.danger .stat-value {
+    color: #ef4444;
+  }
+
+  .result-stat-card.success .stat-value {
+    color: #22c55e;
+  }
+
+  .result-stat-card.neutral .stat-value {
+    color: #3b82f6;
+  }
+
+  .result-stat-card .stat-label {
+    font-size: 13px;
+    color: #737373;
+    font-weight: 500;
+  }
+
+  /* Risk Meter */
+  .risk-meter-container {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+
+  .risk-meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .risk-meter-header h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #171717;
+  }
+
+  .risk-meter-header .risk-badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .risk-meter-header .risk-badge.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .risk-meter-header .risk-badge.low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .risk-bar-wrapper {
+    position: relative;
+    height: 16px;
+    background: linear-gradient(90deg, #22c55e 0%, #fbbf24 50%, #ef4444 100%);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .risk-bar-indicator {
+    position: absolute;
+    top: -8px;
+    width: 4px;
+    height: 32px;
+    background: #0a0a0a;
+    border-radius: 2px;
+    transition: left 1s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .risk-bar-indicator::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #0a0a0a;
+  }
+
+  .risk-meter-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .risk-meter-labels span {
+    font-size: 12px;
+    color: #737373;
+  }
+
+  /* Recommendation Section */
+  .recommendation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .recommendation-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .recommendation-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    gap: 20px;
+  }
+
+  .recommendation-card .rec-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .recommendation-card .rec-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .results-success .recommendation-card .rec-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .results-danger .recommendation-card .rec-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .recommendation-card .rec-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #171717;
+    margin-bottom: 8px;
+  }
+
+  .recommendation-card .rec-content p {
+    font-size: 13px;
+    color: #525252;
+    line-height: 1.6;
+  }
+
+  /* Suggestions Section */
+  .suggestions-section {
+    margin-top: 32px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 16px;
+    border: 1px solid #e5e5e5;
+  }
+
+  .suggestions-section h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #171717;
+    margin-bottom: 16px;
+  }
+
+  .suggestions-section ul {
+    list-style-type: disc;
+    padding-left: 20px;
+  }
+
+  .suggestions-section li {
+    font-size: 14px;
+    color: #525252;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  /* Disclaimer */
+  .results-disclaimer {
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .results-disclaimer svg {
+    flex-shrink: 0;
+    color: #0284c7;
+  }
+
+  .results-disclaimer p {
+    font-size: 13px;
+    color: #0369a1;
+    line-height: 1.6;
+  }
+
+  /* Error */
+  .error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .error-message svg {
+    flex-shrink: 0;
+  }
+</style>
+
+<!-- Hero Section -->
+<section class="prediction-hero" data-aos="fade-up">
+  <div class="prediction-hero-content">
+    <div class="badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      Diabetes Risk Analysis
     </div>
-</body>
-</html>
+    <h1>Diabetes Prediction</h1>
+    <p>Enter your clinical parameters below to assess your diabetes risk using our advanced machine learning model trained on medical datasets.</p>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="prediction-content">
+  <div class="prediction-wrapper">
+    
+    <!-- Form Container -->
+    <form method="POST" action="{% url 'diabetiesprediction' %}">
+      {% csrf_token %}
+      <div class="prediction-container" data-aos="fade-up" data-aos-delay="100">
+        
+        <!-- Left Side - Guide (Dark) -->
+        <div class="guide-section" id="guide">
+          <p class="section-label">Parameter Guide</p>
+          <h2>Health Assessment</h2>
+          <p>This tool uses 8 key health metrics from the PIMA Indians Diabetes Dataset. Hover over each parameter to learn more.</p>
+          
+          <div class="guide-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            All Parameters
+          </div>
+          
+          <div class="guide-list">
+            <!-- Demographics -->
+            <p class="guide-category">Demographics</p>
+            
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Pregnancies</strong>
+                  <span class="short-desc">Number of pregnancies</span>
+                </div>
+                <span class="range">0-17</span>
+              </div>
+              <div class="details">
+                <p>Number of times pregnant. Gestational diabetes increases Type 2 diabetes risk later in life.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Enter 0 if male or never pregnant
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Age</strong>
+                  <span class="short-desc">Current age in years</span>
+                </div>
+                <span class="range">21-81</span>
+              </div>
+              <div class="details">
+                <p>Risk increases significantly after age 45, though younger diagnosis is rising.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Enter your current age. Example: 45
+                </div>
+              </div>
+            </div>
+
+            <!-- Physical Measurements -->
+            <p class="guide-category">Physical Measurements</p>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>BMI</strong>
+                  <span class="short-desc">Body Mass Index</span>
+                </div>
+                <span class="range">0-67.1</span>
+              </div>
+              <div class="details">
+                <p>Higher BMI strongly correlates with diabetes risk. Calculated as weight(kg)/height(m)².</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;18.5</span> Underweight</div>
+                  <div class="option"><span class="option-value">18.5-24.9</span> Normal</div>
+                  <div class="option"><span class="option-value">25-29.9</span> Overweight</div>
+                  <div class="option"><span class="option-value">&gt;30</span> Obese</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Skin Thickness</strong>
+                  <span class="short-desc">Triceps skinfold (mm)</span>
+                </div>
+                <span class="range">0-99</span>
+              </div>
+              <div class="details">
+                <p>Measures subcutaneous fat. Higher values indicate greater body fat percentage.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;20</span> Low</div>
+                  <div class="option"><span class="option-value">20-30</span> Normal</div>
+                  <div class="option"><span class="option-value">&gt;30</span> High</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Blood Metrics -->
+            <p class="guide-category">Blood Metrics</p>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Glucose</strong>
+                  <span class="short-desc">Plasma glucose (mg/dL)</span>
+                </div>
+                <span class="range">0-199</span>
+              </div>
+              <div class="details">
+                <p>2-hour plasma glucose from oral glucose tolerance test. Key diabetes diagnostic marker.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;140</span> Normal</div>
+                  <div class="option"><span class="option-value">140-199</span> Prediabetes</div>
+                  <div class="option"><span class="option-value">&gt;200</span> Diabetes</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Blood Pressure</strong>
+                  <span class="short-desc">Diastolic BP (mm Hg)</span>
+                </div>
+                <span class="range">0-122</span>
+              </div>
+              <div class="details">
+                <p>High blood pressure often coexists with diabetes, increasing cardiovascular risk.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;80</span> Normal</div>
+                  <div class="option"><span class="option-value">80-89</span> Elevated</div>
+                  <div class="option"><span class="option-value">&gt;90</span> High</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>Insulin</strong>
+                  <span class="short-desc">2-Hour serum insulin</span>
+                </div>
+                <span class="range">0-846</span>
+              </div>
+              <div class="details">
+                <p>Abnormal levels indicate insulin resistance, a diabetes precursor.</p>
+                <div class="options">
+                  <div class="option"><span class="option-value">&lt;16</span> Normal fasting</div>
+                  <div class="option"><span class="option-value">&gt;100</span> Possible resistance</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Genetics -->
+            <p class="guide-category">Genetics</p>
+
+            <div class="guide-item">
+              <div class="guide-item-header">
+                <div>
+                  <strong>DPF</strong>
+                  <span class="short-desc">Diabetes Pedigree Function</span>
+                </div>
+                <span class="range">0.078-2.42</span>
+              </div>
+              <div class="details">
+                <p>Family history risk score. Higher values = stronger genetic predisposition.</p>
+                <div class="tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                  Score based on family history of diabetes
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side - Form (White) -->
+        <div class="form-section">
+          <!-- Demographics -->
+          <p class="form-section-title">Demographics</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Pregnancies <span class="required">*</span></label>
+              <input type="number" name="pregnancies" min="0" max="17" step="1" 
+                     placeholder="e.g., 2" value="{{ user_input.pregnancies|default:'' }}" required>
+            </div>
+            <div class="form-group">
+              <label>Age (years) <span class="required">*</span></label>
+              <input type="number" name="age" min="21" max="81" step="1" 
+                     placeholder="e.g., 45" value="{{ user_input.age|default:'' }}" required>
+            </div>
+          </div>
+
+          <!-- Physical Measurements -->
+          <p class="form-section-title">Physical Measurements</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>BMI <span class="required">*</span></label>
+              <input type="number" name="bmi" min="0" max="67.1" step="0.1" 
+                     placeholder="e.g., 25.5" value="{{ user_input.bmi|default:'' }}" required>
+            </div>
+            <div class="form-group">
+              <label>Skin Thickness (mm) <span class="required">*</span></label>
+              <input type="number" name="skin" min="0" max="99" step="0.1" 
+                     placeholder="e.g., 23" value="{{ user_input.skin|default:'' }}" required>
+            </div>
+          </div>
+
+          <!-- Blood Metrics -->
+          <p class="form-section-title">Blood Metrics</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Glucose (mg/dL) <span class="required">*</span></label>
+              <input type="number" name="glucose" min="0" max="199" step="0.1" 
+                     placeholder="e.g., 120" value="{{ user_input.glucose|default:'' }}" required>
+            </div>
+            <div class="form-group">
+              <label>Blood Pressure (mm Hg) <span class="required">*</span></label>
+              <input type="number" name="bp" min="0" max="122" step="0.1" 
+                     placeholder="e.g., 80" value="{{ user_input.bp|default:'' }}" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Insulin (mu U/ml) <span class="required">*</span></label>
+              <input type="number" name="insulin" min="0" max="846" step="0.1" 
+                     placeholder="e.g., 85" value="{{ user_input.insulin|default:'' }}" required>
+            </div>
+            <div class="form-group">
+              <label>DPF <span class="required">*</span></label>
+              <input type="number" name="dpf" min="0.078" max="2.42" step="0.001" 
+                     placeholder="e.g., 0.627" value="{{ user_input.dpf|default:'' }}" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-predict">Predict Risk</button>
+
+          {% if errors %}
+            {% for error in errors %}
+            <div class="error-message">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              {{ error }}
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          {% if error %}
+          <div class="error-message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            {{ error }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+
+    <!-- Quick Prediction Result -->
+    {% if probability %}
+    <div class="quick-prediction-result {% if probability > 50 %}danger{% else %}success{% endif %}" data-aos="fade-up">
+      <h4>📊 Quick Prediction Result</h4>
+      <p>{{ prediction }} (Risk: {{ probability }}%)</p>
+    </div>
+    {% endif %}
+
+    <!-- Full Results Section -->
+    {% if probability %}
+    <div class="results-section" data-aos="fade-up">
+      <div class="results-card {% if probability > 50 %}results-danger{% else %}results-success{% endif %}">
+        
+        <div class="results-header">
+          <div class="results-header-left">
+            <div class="results-icon-large">
+              {% if probability > 50 %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="results-title-area">
+              <h3>{% if probability > 50 %}High Risk Detected{% else %}Low Risk Detected{% endif %}</h3>
+              <p>{% if probability > 50 %}Our analysis indicates elevated risk factors. Please consult a healthcare professional for comprehensive evaluation.{% else %}Your results suggest a lower likelihood of diabetes. Continue maintaining healthy habits.{% endif %}</p>
+            </div>
+          </div>
+          <div class="results-header-right">
+            <div class="main-percentage">{{ probability }}%</div>
+            <div class="main-label">Risk Score</div>
+          </div>
+        </div>
+
+        <div class="results-body">
+          
+          <div class="results-grid">
+            <div class="result-stat-card danger">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </div>
+              <div class="stat-value">{{ probability }}%</div>
+              <div class="stat-label">Disease Probability</div>
+            </div>
+            <div class="result-stat-card success">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="stat-value">{{ risk_remaining }}%</div>
+              <div class="stat-label">Healthy Probability</div>
+            </div>
+            <div class="result-stat-card neutral">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="stat-value">{% if probability > 70 %}High{% elif probability > 30 %}Moderate{% else %}Low{% endif %}</div>
+              <div class="stat-label">Risk Category</div>
+            </div>
+          </div>
+
+          <div class="risk-meter-container">
+            <div class="risk-meter-header">
+              <h4>Risk Assessment Meter</h4>
+              <span class="risk-badge {% if probability > 50 %}high{% else %}low{% endif %}">
+                {% if probability > 50 %}Elevated Risk{% else %}Normal Range{% endif %}
+              </span>
+            </div>
+            <div class="risk-bar-wrapper">
+              <div class="risk-bar-indicator" style="left: calc({{ probability }}% - 2px);"></div>
+            </div>
+            <div class="risk-meter-labels">
+              <span>0% - Low Risk</span>
+              <span>50% - Moderate</span>
+              <span>100% - High Risk</span>
+            </div>
+          </div>
+
+          <div class="recommendation-grid">
+            <div class="recommendation-card">
+              <div class="rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <div class="rec-content">
+                <h4>{% if probability > 50 %}Immediate Action{% else %}Preventive Care{% endif %}</h4>
+                <p>{% if probability > 50 %}Schedule an appointment with a healthcare professional for detailed examination and diagnostic tests like A1C or glucose tolerance test.{% else %}Continue regular health check-ups annually. Monitor blood sugar levels every 6 months.{% endif %}</p>
+              </div>
+            </div>
+            <div class="recommendation-card">
+              <div class="rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                  <line x1="6" y1="1" x2="6" y2="4"/>
+                  <line x1="10" y1="1" x2="10" y2="4"/>
+                  <line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
+              </div>
+              <div class="rec-content">
+                <h4>Lifestyle Recommendations</h4>
+                <p>{% if probability > 50 %}Adopt a diabetes-friendly diet low in sugar and refined carbs. Engage in moderate exercise as approved by your doctor. Quit smoking if applicable.{% else %}Maintain a balanced diet rich in fruits, vegetables, and whole grains. Exercise at least 150 minutes per week. Manage stress effectively.{% endif %}</p>
+              </div>
+            </div>
+          </div>
+
+          {% if suggestions %}
+          <div class="suggestions-section">
+            <h4>Personalized Health Suggestions</h4>
+            <ul>
+              {% for suggestion in suggestions %}
+              <li>{{ suggestion }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div class="results-disclaimer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            <p><strong>Medical Disclaimer:</strong> This prediction is based on a machine learning model and should not be considered as medical advice. Always consult with a qualified healthcare professional for proper diagnosis and treatment. This tool is intended for educational and informational purposes only.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

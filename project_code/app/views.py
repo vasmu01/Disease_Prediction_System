@@ -142,75 +142,17 @@ else:
 # DIABETES PREDICTION
 # =============================================================================
 
-def generate_diabetes_suggestions(input_data, probability):
-    """
-    Generate personalized health suggestions based on diabetes prediction input.
-    
-    Args:
-        input_data: List of 8 features [pregnancies, glucose, bp, skin, insulin, bmi, dpf, age]
-        probability: Prediction probability (0-100)
-    
-    Returns:
-        List of health suggestions
-    """
-    suggestions = []
-    pregnancies, glucose, bp, skin, insulin, bmi, dpf, age = input_data
-
-    # Glucose level suggestions
-    if glucose > 125:
-        suggestions.append("⚠️ High blood glucose: Consult doctor and monitor diet.")
-    elif glucose < 70:
-        suggestions.append("⚠️ Low blood glucose: Monitor diet and consult doctor if needed.")
-
-    # BMI suggestions
-    if bmi > 30:
-        suggestions.append("⚖️ High BMI: Weight management recommended.")
-    elif bmi < 18.5:
-        suggestions.append("⚖️ Low BMI: Ensure proper nutrition.")
-
-    # Age-based suggestions
-    if age > 50:
-        suggestions.append("👴 Age > 50: Regular check-ups advised.")
-    elif age < 18:
-        suggestions.append("🧒 Age < 18: Monitor growth and health regularly.")
-
-    # Pregnancy history
-    if pregnancies > 3:
-        suggestions.append(f"🤰 High number of pregnancies ({pregnancies}): Monitor health carefully.")
-
-    # Blood pressure
-    if bp > 130:
-        suggestions.append("💓 High blood pressure: Regular check-ups and lifestyle adjustments recommended.")
-    elif bp < 80:
-        suggestions.append("💓 Low blood pressure: Ensure hydration and consult doctor if symptomatic.")
-
-    # Insulin levels
-    if insulin > 200:
-        suggestions.append("💉 High insulin levels: Consult doctor about insulin resistance.")
-    elif insulin < 30:
-        suggestions.append("💉 Low insulin levels: Monitor glucose and diet.")
-
-    # Diabetes pedigree function
-    if dpf > 1:
-        suggestions.append("📊 High diabetes pedigree score: Increased risk, regular monitoring recommended.")
-
-    # Overall risk assessment
-    if probability > 50:
-        suggestions.append("⚠️ HIGH RISK: Immediate medical attention recommended.")
-    else:
-        suggestions.append("✅ LOW RISK: Maintain healthy lifestyle and regular check-ups.")
-
-    return suggestions
-
 
 def diabeties_prediction(request):
-    """Diabetes prediction view with personalized health suggestions."""
+    """
+    Diabetes prediction view with personalized health suggestions.
+    """
     context = {}
+    fields = ["pregnancies", "glucose", "bp", "skin", "insulin", "bmi", "dpf", "age"]
 
     if request.method == "POST":
         user_input = {}
         errors = []
-        fields = ["pregnancies", "glucose", "bp", "skin", "insulin", "bmi", "dpf", "age"]
 
         # Validate all required fields
         for field in fields:
@@ -223,29 +165,33 @@ def diabeties_prediction(request):
             except ValueError:
                 errors.append(f"{field.replace('_', ' ').title()} must be a number.")
 
+        context["user_input"] = user_input
+
+        # Return validation errors if any
         if errors:
             context["errors"] = errors
-            context["user_input"] = user_input
+        # Check if model is loaded
         elif diabetes_model is None:
-            context["error"] = "Diabetes model not loaded."
+            context["errors"] = ["Diabetes model not loaded."]
         else:
             # Make prediction
             input_array = np.array([list(user_input.values())])
             prediction = diabetes_model.predict(input_array)[0]
             probability = diabetes_model.predict_proba(input_array)[0][1] * 100
+            probability = round(probability, 2)  # Round for display
 
-            # Generate personalized suggestions
-            suggestions = generate_diabetes_suggestions(list(user_input.values()), probability)
+            # Calculate risk remaining
+            risk_remaining = round(100 - probability, 2)
+
+            # Generate suggestions (pass user_input dict and probability)
 
             context.update({
-                "user_input": user_input,
                 "prediction": "HAS Diabetes" if prediction == 1 else "Does NOT have Diabetes",
-                "probability": round(probability, 2),
-                "suggestions": suggestions
+                "probability": probability,
+                "risk_remaining": risk_remaining,
             })
 
     return render(request, "diabetiesprediction.html", context)
-
 
 # =============================================================================
 # LUNG CANCER PREDICTION
