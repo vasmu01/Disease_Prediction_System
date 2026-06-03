@@ -29,14 +29,11 @@ The system analyzes symptom data using a trained model and provides quick predic
 
 ##Project Structure
 
-## 📂 Project Structure
-
 project_code/
 │
-├── apps/                         
+├── apps/
 │   └── app/
 │       ├── migrations/
-│       ├── models/
 │       ├── templates/
 │       │   └── app/
 │       ├── static/
@@ -49,23 +46,21 @@ project_code/
 │       ├── urls.py
 │       └── views.py
 │
-├── config/                        
+├── config/
 │   ├── __init__.py
 │   ├── settings.py
 │   ├── urls.py
 │   ├── asgi.py
 │   └── wsgi.py
 │
-├── templates/                     
+├── templates/
+├── static/
+├── media/
 │
-├── static/                       
-│
-├── media/                      
-│
-├── db.sqlite3
 ├── manage.py
 ├── requirements.txt
-└── README.md
+├── README.md
+└── .gitignore
 
 
 ## Installation
