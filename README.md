@@ -31,7 +31,7 @@ The system analyzes symptom data using a trained model and provides quick predic
 
 ### 1.Clone the Repository
 
-git clone https://github.com/vasmu01/Disease-Prediction-System
+git clone[ https://github.com/vasmu01/Disease-Prediction-System](https://github.com/vasmu01/Disease_Prediction_System.git)
 cd Disease-Prediction-System
 
 
