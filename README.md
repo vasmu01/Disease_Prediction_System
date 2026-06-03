@@ -32,39 +32,45 @@ The system analyzes symptom data using a trained model and provides quick predic
 ## 📂 Project Structure
 
 project_code/
-├── Raw Code
-├
-├── app/
-│   ├── migrations/
-│   ├── models/
-│   ├── static/
-│   ├── templates/
-│   │
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── models.py
-│   ├── tests.py
-│   ├── urls.py
-│   └── views.py
 │
-├── myproject/
+├── apps/                         
+│   └── app/
+│       ├── migrations/
+│       ├── models/
+│       ├── templates/
+│       │   └── app/
+│       ├── static/
+│       │   └── app/
+│       ├── __init__.py
+│       ├── admin.py
+│       ├── apps.py
+│       ├── models.py
+│       ├── tests.py
+│       ├── urls.py
+│       └── views.py
+│
+├── config/                        
+│   ├── __init__.py
 │   ├── settings.py
 │   ├── urls.py
 │   ├── asgi.py
 │   └── wsgi.py
 │
-├── staticfiles/
+├── templates/                     
+│
+├── static/                       
+│
+├── media/                      
+│
 ├── db.sqlite3
 ├── manage.py
 ├── requirements.txt
 └── README.md
 
 
-
 ## Installation
 
-### 1. Clone the Repository
+### 1.Clone the Repository
 
 git clone https://github.com/vasmu01/Disease-Prediction-System.git
 cd Disease-Prediction-System
