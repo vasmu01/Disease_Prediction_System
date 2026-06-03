@@ -27,6 +27,18 @@ The system analyzes symptom data using a trained model and provides quick predic
 - CSS
 - JavaScript
 
+## Folder Structure
+project/
+├── apps/
+├── config/
+├── templates/
+├── static/
+├── media/
+├── manage.py
+├── requirements.txt
+├── .gitignore
+└── README.md
+
 
 ## Installation
 
