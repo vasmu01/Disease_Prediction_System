@@ -21,6 +21,7 @@ The system analyzes symptom data using a trained model and provides quick predic
 - Python
 - Pandas
 - NumPy
+- Random Forest
 - django
 - HTML
 - CSS
