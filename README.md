@@ -66,7 +66,7 @@ project_code/
 
 ### 1. Clone the Repository
 
-git clone https://github.com/kiran/Disease-Prediction-System.git
+git clone https://github.com/vasmu01/Disease-Prediction-System.git
 cd Disease-Prediction-System
 
 
@@ -84,31 +84,25 @@ source venv/bin/activate
 
 **Windows**
 
-```bash
 venv\Scripts\activate
-```
 
 ### 4. Install Dependencies
 
-```bash
 pip install -r requirements.txt
-```
+
 
 ### 5. Run the Application
 
-```bash
 python app.py
-```
+
 
 ### 6. Open in Browser
 
-```text
 http://127.0.0.1:5000
-```
 
----
 
-## 🔍 How It Works
+
+##  How It Works
 
 1. User enters symptoms.
 2. Input data is processed.
@@ -127,45 +121,13 @@ http://127.0.0.1:5000
 - Model Evaluation
 - Disease Prediction
 
----
 
-## 📸 Screenshots
-
-Add screenshots of your application here.
-
-```md
-![Home Page](screenshots/home.png)
-![Prediction Result](screenshots/result.png)
-```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome.
-
-1. Fork the repository
-2. Create a new branch
-3. Make your changes
-4. Commit your changes
-5. Push to your branch
-6. Create a Pull Request
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👨‍💻 Author
+##  Author
 
 **Kiran Magar**
 
-GitHub: https://github.com/your-username
+GitHub: https://github.com/vasmu01
 
----
 
 ## ⭐ Support
 
